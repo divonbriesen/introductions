@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Course Introduction Generator</title>
+  <link rel="stylesheet" href="styles/default.css" />
+</head>
+<body>
+  <h1>Course Introduction Form</h1>
+  <div class="workspace">
+    <div class="col form-col">
+      <form id="introForm" aria-labelledby="formTitle">
+        <div class="top-actions">
+          <button type="button" id="submitTopBtn" class="texty-btn">Generate Webpage</button>
+          <button type="button" id="loadSampleTopBtn" class="texty-btn">Load Sample</button>
+          <button type="button" id="resetTopBtn" class="texty-btn">Clear</button>
+        </div>
+    <fieldset>
+      <legend id="formTitle">Personal information</legend>
+
+      <fieldset aria-label="Name">
+        <legend>Name</legend>
+        <div class="name-row">
+          <label for="firstName">First</label>
+          <input id="firstName" name="firstName" type="text" value="Inti" />
+          <label for="middleName">Middle</label>
+          <input id="middleName" name="middleName" type="text" value="Amaru" />
+          <label for="lastName">Last</label>
+          <input id="lastName" name="lastName" type="text" value="Quispe" />
+          <label for="preferredName">Nickname</label>
+          <input id="preferredName" name="preferredName" type="text" value="Code-Alpaca" />
+        </div>
+      </fieldset>
+
+      <div class="short-field mascot-pair">
+        <label for="mascotDescriptor">Mascot Descriptor</label>
+        <input id="mascotDescriptor" name="mascotDescriptor" type="text" placeholder="e.g., Peruvian Coding" value="Peruvian Coding" />
+        <label for="mascot" class="visually-hidden">Mascot</label>
+        <input id="mascot" name="mascot" type="text" placeholder="e.g., Alpaca" value="Alpaca" />
+      </div>
+      <div class="short-field">
+        <label for="displayName">Display Name (First M. "Nickname" Last):</label>
+        <input id="displayName" name="displayName" type="text" placeholder="First M. \"Nickname\" Last" value="Inti \"Code-Alpaca\" Quispe" readonly />
+      </div>
+      <div class="short-field email-short">
+        <label for="email">Email address:</label>
+        <input id="email" name="email" type="email" aria-describedby="emailHelp" placeholder="name@example.edu" value="inti.quispe@codingalpaca.edu" />
+        <small id="emailHelp">We will not share this address; used only for contact.</small>
+      </div>
+      <div class="short-field ack-short">
+        <label for="acknowledgment">Initials and Date (e.g., JA - 09/26/2025):</label>
+        <input id="acknowledgment" name="acknowledgment" type="text" value="IQ - 09/26/2025" />
+      </div>
+      <div class="short-field">
+        <label for="imageUrl">Image URL:</label>
+        <input id="imageUrl" name="imageUrl" type="url" placeholder="https://..." value="https://picsum.photos/300?random=1" />
+      </div>
+      <div class="short-field">
+        <label for="caption">Image Caption:</label>
+        <input id="caption" name="caption" type="text" value="Inti coding near the Andes" />
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Personal statement</legend>
+      <div>
+        <label for="personalStatement">Personal Statement:</label>
+        <textarea id="personalStatement" name="personalStatement" rows="2">I'm a developer and educator who loves teaching people how to reason with code and algorithms. I enjoy hands-on projects, open-source collaboration, and coffee while debugging.</textarea>
+      </div>
+      <div>
+        <label for="quoteText">Favorite Quote:</label>
+        <textarea id="quoteText" name="quoteText" rows="1">Simplicity is the soul of efficiency.</textarea>
+      </div>
+      <div class="short-field">
+        <label for="quoteAuthor">Quote Author:</label>
+        <input id="quoteAuthor" name="quoteAuthor" type="text" value="Ada Lovelace" />
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Backgrounds</legend>
+      <div>
+        <label for="personalBackground">Personal Background:</label>
+        <textarea id="personalBackground" name="personalBackground" rows="2">Grew up near the Andes; enjoys trekking, photography, and local cuisine.</textarea>
+      </div>
+      <div>
+        <label for="professionalBackground">Professional Background:</label>
+        <textarea id="professionalBackground" name="professionalBackground" rows="2">5 years as a software engineer, 3 years as a curriculum developer for introductory CS courses.</textarea>
+      </div>
+      <div>
+        <label for="academicBackground">Academic Background:</label>
+        <textarea id="academicBackground" name="academicBackground" rows="2">BSc in Computer Science; ongoing study in human-centered computing.</textarea>
+      </div>
+      <div>
+        <label for="funnyRemember">Something Funny Or Interesting To Remember Me By:</label>
+        <textarea id="funnyRemember" name="funnyRemember" rows="2">Once taught a class of llamas to debug a loop</textarea>
+      </div>
+      <div>
+        <label for="otherNotes">Anything Else You'd Like To Add:</label>
+        <textarea id="otherNotes" name="otherNotes" rows="2">Prefers quinoa snacks and composes multilingual commit messages (12 languages)</textarea>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Course & additional</legend>
+      <div class="short-field" id="computer-platform">
+        <label>Platform:</label>
+        <label><input type="radio" name="computerPlatform" value="Laptop" checked /> Laptop</label>
+        <label><input type="radio" name="computerPlatform" value="Desktop" /> Desktop</label>
+      </div>
+      <div class="short-field radio-group" id="computer-os">
+        <label>Operating System:</label>
+        <label><input type="radio" name="computerOS" value="Windows" /> Windows</label>
+        <label><input type="radio" name="computerOS" value="Linux" /> Linux</label>
+        <label><input type="radio" name="computerOS" value="macOS" checked /> macOS</label>
+        <label><input type="radio" name="computerOS" value="ChromeOS" /> ChromeOS</label>
+      </div>
+      <div class="short-field work-location">
+        <label for="workLocation">Work Location:</label>
+        <input id="workLocation" name="workLocation" type="text" placeholder="e.g., Home, Campus, Office" value="Home office (City)" />
+      </div>
+      <div>
+        <label for="backupPlan">Backup Plan (where/how/what you'll use if something goes wrong):</label>
+        <textarea id="backupPlan" name="backupPlan" rows="2" placeholder="e.g., borrow laptop from lab; phone hotspot + editor">Use campus lab machine; phone hotspot and basic editor; keep code in cloud repo.</textarea>
+      </div>
+      <div>
+        <label>Courses (add or remove rows):</label>
+        <div id="coursesTable">
+          <div class="courses-header">
+            <div class="col-num">#</div>
+            <div class="col-dept">Department</div>
+            <div class="col-number">Course #</div>
+            <div class="col-name">Course Name</div>
+            <div class="col-reason">Reason for taking</div>
+            <div class="col-actions"></div>
+          </div>
+          <!-- rows will be inserted here -->
+        </div>
+        <div style="margin-top:0.5rem;">
+          <button type="button" id="addCourseBtn">Add course</button>
+        </div>
+      </div>
+      <input type="hidden" id="coursesCount" name="coursesCount" value="0" />
+      <div>
+      </div>
+    </fieldset>
+
+    
+
+    <div>
+      <button type="submit">Generate Webpage</button>
+      <button type="button" id="loadSampleBtn">Load Sample</button>
+      <button type="button" id="resetBtn">Clear</button>
+    </div>
+      </form>
+    </div>
+    <div class="col preview-col">
+      <h2>Preview</h2>
+      <div id="output"></div>
+    </div>
+  </div>
+
+  <div class="code-row">
+    <div class="code-col">
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        <label for="jsonOutput">JSON Data</label>
+        <button type="button" id="copyJsonBtn" class="copy-btn">Copy JSON</button>
+        <span id="copyJsonStatus" class="copy-status" aria-live="polite"></span>
+      </div>
+      <textarea id="jsonOutput" readonly></textarea>
+    </div>
+    <div class="code-col">
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        <label for="htmlOutput">HTML (main content)</label>
+        <button type="button" id="copyHtmlBtn" class="copy-btn">Copy HTML</button>
+        <span id="copyHtmlStatus" class="copy-status" aria-live="polite"></span>
+      </div>
+      <textarea id="htmlOutput" readonly></textarea>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

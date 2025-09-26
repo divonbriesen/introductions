@@ -1,0 +1,48 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 2em;
+}
+h1, h2 {
+  text-align: center;
+}
+form {
+  max-width: 600px;
+  margin: auto;
+}
+label {
+  display: block;
+  margin-top: 1em;
+}
+input, textarea {
+  width: 100%;
+  padding: 0.5em;
+  margin-top: 0.3em;
+}
+button {
+  margin-top: 1em;
+  padding: 0.7em;
+  font-size: 1em;
+}
+#output {
+  margin-top: 3em;
+  border-top: 2px solid #ccc;
+  padding-top: 2em;
+}
+.centered {
+  text-align: center;
+}
+.large {
+  font-size: 1.5em;
+}
+.italic {
+  font-style: italic;
+}
+img {
+  max-width: 300px;
+  display: block;
+  margin: 1em auto;
+}
+ul {
+  list-style-type: disc;
+  margin-left: 2em;
+}
