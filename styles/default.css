@@ -1,294 +1,65 @@
-body {
-  font-family: Arial, sans-serif;
-  margin: 16px; /* tighter page padding */
-}
-h1, h2 {
-  text-align: center;
-}
-form {
-  max-width: 1200px; /* allow the form to be much wider on large screens */
-  width: 100%;
-  margin: auto;
-}
+/* --- NEW STYLES for "Live Edit" feel --- */
 
-.workspace {
-  display: grid;
-  grid-template-columns: 2fr 1fr; /* make the form column wider than the preview */
-  gap: 2rem;
-  align-items: start;
-  max-width: 1200px; /* wider workspace */
-  width: 100%;
-  margin: 0 auto;
-}
-.form-col {
-  padding-right: 1.5rem; /* give a bit more breathing room to the left column */
-}
-.form-col {
-  padding-right: 1rem;
-}
-.preview-col {
-  border-left: 1px solid #e0e0e0;
-  padding-left: 1rem;
-}
-
-.code-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  max-width: 1100px;
-  margin: 1.5rem auto 4rem;
-}
-
-.courses-header, .course-row {
-  display: grid;
-  grid-template-columns: 40px 120px 100px 1fr 2fr 60px;
-  gap: 0.5rem;
-  align-items: center;
-  padding: 0.35rem 0.25rem;
-  border-bottom: 1px solid #eee;
-}
-.course-row.draggable {
-  cursor: move;
-  background: #fffdf6;
-}
-.courses-header {
-  font-weight: bold;
-  background: #fafafa;
-}
-.course-row input {
-  width: 100%;
-  padding: 0.3rem;
-  box-sizing: border-box;
-}
-.course-row .col-actions button {
-  padding: 0.25rem 0.5rem;
-}
-
-.course-row .col-actions button.move-up,
-.course-row .col-actions button.move-down {
-  width: 2rem;
-  padding: 0.2rem 0.3rem;
-  margin-right: 0.25rem;
-}
-
-.course-row .row-error {
-  color: #a00;
-  font-size: 0.85rem;
-  margin-top: 0.25rem;
-}
-
-.copy-btn {
-  font-size: 0.9em;
-  padding: 0.2rem 0.5rem;
-}
-.copy-status {
-  color: #2b7a2b;
-  font-size: 0.9em;
-}
-
-.course-row.drag-over {
-  outline: 2px dashed #9fb8ff;
-}
-
-.code-col label {
-  display: block;
-  font-weight: bold;
-  margin-bottom: 0.5rem;
-}
-.code-col textarea {
-  width: 97%;
-  min-height: 220px;
-  font-family: Menlo, Monaco, monospace;
-  font-size: 13px;
-  padding: 0.75rem;
-  box-sizing: border-box;
-}
-label {
-  display: block;
-  margin-top: 1em;
-}
-input {
-  width: 100%;
-  padding: 0.5em;
-  margin-top: 0.3em;
-}
+/* General Styling for all inputs and textareas */
+input[type="text"],
 textarea {
-  width: 97%;
-  padding: 0.5em;
-  margin-top: 0.3em;
-}
-button {
-  margin-top: 1em;
-  padding: 0.6em 0.8em;
-  font-size: 0.95em;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  background: #f7f7f7;
-  cursor: pointer;
+    /* 1. Reset Appearance */
+    border: none;
+    background-color: transparent;
+    outline: none;
+    padding: 0;
+    margin: 0;
+    resize: none;
+
+    /* 2. Match Surrounding Text */
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+    color: inherit;
+    line-height: inherit;
+
+    /* 3. "Fill in the Blank" Underline */
+    border-bottom: 2px dashed #ccc;
+    border-radius: 0;
+    width: auto;
+
+    /* FIX: Align the input fields with the text baseline */
+    vertical-align: baseline;
 }
 
-/* subtle, text-like buttons used at top of form */
-.top-actions {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-  margin-bottom: 0.5rem;
-  /* stick to top of viewport while scrolling inside the page */
-  position: sticky;
-  top: 8px;
-  z-index: 40;
-  /* slightly opaque background to avoid text overlap when sticky */
-  background: rgba(255,255,255,0.92);
-  padding: 0.25rem 0.25rem;
-  border-bottom: 1px solid #f0f0f0;
-}
-.texty-btn {
-  padding: 0; /* make them truly inline/link-like */
-  margin: 0;
-  font-size: 0.95em;
-  border: none;
-  background: none;
-  color: #0366d6; /* link-blue */
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  cursor: pointer;
-}
-.texty-btn:hover { color: #024e9b; }
-.texty-btn:active { color: #012e57; }
-.texty-btn:focus {
-  outline: 2px dashed #8bb4ff;
-  outline-offset: 2px;
-  border-radius: 2px;
-}
-#output {
-  margin-top: 3em;
-  border-top: 2px solid #ccc;
-  padding-top: 2em;
-}
-.centered {
-  text-align: center;
-}
-.large {
-  font-size: 1.5em;
-}
-.italic {
-  font-style: italic;
-}
-img.profile-image {
-  max-width: 300px;
-  display: block;
-  margin: 1em auto;
-}
-ul {
-  list-style-type: disc;
-  margin-left: 2em;
+/* Style the placeholder text to be subtle */
+input[type="text"]::placeholder,
+textarea::placeholder {
+    color: #aaa;
+    opacity: 1;
 }
 
-.name-row {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-  flex-wrap: wrap;
-}
-.name-row label {
-  margin-top: 0;
-  white-space: nowrap;
-}
-.name-row input {
-  width: 5.25rem; /* reduced by ~33% */
-  min-width: 5rem;
+/* Add a subtle effect when a field is being edited */
+input[type="text"]:focus,
+textarea:focus {
+    border-bottom: 2px solid #007bff;
+    background-color: rgba(0, 123, 255, 0.05);
 }
 
-.mascot-pair input {
-  width: 6.5rem;
+/* --- Specific Sizing & Alignment --- */
+
+/* Ensure inputs inside the h1 match its weight */
+h1 input[type="text"] {
+    font-weight: inherit;
 }
 
-.email-short input {
-  width: 8rem; /* half of previous */
-}
+/* Give inputs a minimum width so they don't collapse */
+#name { min-width: 15rem; }
+#role { min-width: 12rem; }
+#work { min-width: 12rem; }   /* Reduced width to prevent wrapping */
+#social { min-width: 10rem; } /* Reduced width to prevent wrapping */
 
-.ack-short input {
-  width: 8rem; /* for initials/date field */
-}
-
-.work-location input {
-  width: 9rem; /* reduced to about half */
-}
-
-/* make the favorite quote textarea compact (one line) */
-#quoteText {
-  width: 97%;
-  min-height: 1.2rem; /* single-line appearance */
-  height: auto;
-  padding: 0.25rem 0.5rem;
-}
-
-/* Short single-line field layout: label on the left, small input on the right */
-.short-field {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-.short-field label {
-  margin-top: 0;
-  flex: 0 0 40%;
-  max-width: 40%;
-  white-space: nowrap;
-}
-.short-field input,
-.short-field textarea {
-  flex: 1 1 auto;
-  width: auto;
-  max-width: 18rem; /* keep short fields reasonably narrow */
-}
-.short-field small {
-  display: block;
-  flex-basis: 100%;
-  margin-top: 0.3rem;
-  color: #666;
-  font-size: 0.9em;
-}
-
-@media (max-width: 600px) {
-  .short-field {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .short-field label {
-    flex-basis: auto;
-    max-width: none;
-  }
-  .short-field input,
-  .short-field textarea {
-    max-width: none;
-    width: 100%;
-  }
-}
-
-@media (max-width: 900px) {
-  .workspace {
-    grid-template-columns: 1fr;
-  }
-  .code-row {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* radio-group: keep radio buttons inline and wrap if needed */
-.radio-group {
-  align-items: center;
-}
-.radio-group label {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  margin-right: 0.3rem; /* bring radios closer together */
-}
-
-@media (max-width: 600px) {
-  .radio-group label {
-    display: inline-flex;
-    margin-right: 0.5rem;
-  }
+/* FIX: Special handling for the textarea */
+#passions {
+    display: inline-block; /* Change from 'block' to flow with the sentence */
+    width: 95%;           /* Allow it to take up space and wrap its own text */
+    overflow: hidden;
+    min-height: 1.8rem;
+    border-bottom-width: 1px;
+    vertical-align: bottom; /* Align with the bottom of the text line */
 }
