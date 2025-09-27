@@ -21,6 +21,7 @@ const SAMPLE_FORM_DATA = {
   email: 'joella.hoofer@example.edu',
   acknowledgment: 'JH - 09/26/2025',
   imageUrl: 'https://picsum.photos/300?random=1',
+  imageData: '',
   caption: 'Someplace I\'d rather be',
   personalStatement: "I'm a developer and educator who loves teaching people how to reason with code and algorithms. I enjoy hands-on projects, open-source collaboration, and coffee while debugging.",
   quoteText: 'Simplicity is the soul of efficiency.',
@@ -95,6 +96,9 @@ window.addEventListener("load", () => {
   // wire reset (clear) and load sample buttons
   const resetBtn = document.getElementById('resetBtn');
   const loadSampleBtn = document.getElementById('loadSampleBtn');
+  // image file input and hidden data field
+  const imageFileInput = document.getElementById('imageFile');
+  const imageDataField = document.getElementById('imageData');
   // top duplicated buttons (subtle/texty)
   const submitTopBtn = document.getElementById('submitTopBtn');
   const loadSampleTopBtn = document.getElementById('loadSampleTopBtn');
@@ -165,6 +169,9 @@ window.addEventListener("load", () => {
       for (const [k, v] of Object.entries(SAMPLE_FORM_DATA)) {
         const f = form.elements[k]; if (f) f.value = v;
       }
+      // clear any previously uploaded image data when loading the sample
+      if (imageDataField) imageDataField.value = '';
+      if (imageFileInput) imageFileInput.value = '';
       // populate courses
       const table = document.getElementById('coursesTable');
       if (table) {
@@ -174,11 +181,11 @@ window.addEventListener("load", () => {
       // persist combined data
       const data = Object.fromEntries(new FormData(form).entries());
       data.courses = SAMPLE_COURSES.slice();
-      // combine mascot descriptor + mascot
-      const desc = (form.elements['mascotDescriptor'] || {}).value || '';
-      const masc = (form.elements['mascot'] || {}).value || '';
-      const combined = [desc.trim(), masc.trim()].filter(Boolean).join(' ').trim();
-      if (combined) data.mascot = combined;
+  // preserve mascot descriptor and mascot separately (keep mascot e.g. 'Hippo' and descriptor 'Janky')
+  const desc = (form.elements['mascotDescriptor'] || {}).value || '';
+  const masc = (form.elements['mascot'] || {}).value || '';
+  if (masc.trim()) data.mascot = masc.trim();
+  if (desc.trim()) data.mascotDescriptor = desc.trim();
       // recompute and set displayName with middle initial
       try { const fd1 = new FormData(form); data.displayName = computeDisplayName(fd1); if (form.elements['displayName']) form.elements['displayName'].value = data.displayName; } catch(e) {}
       localStorage.setItem('introData', JSON.stringify(data));
@@ -186,13 +193,280 @@ window.addEventListener("load", () => {
     });
   }
 
+  // handle image file uploads: read as DataURL and store in hidden imageData field
+  if (imageFileInput) {
+    const imagePreview = document.getElementById('imagePreview');
+    const clearImageBtn = document.getElementById('clearImageBtn');
+  const imageErrorEl = document.getElementById('imageError');
+  const imageSpinner = document.getElementById('imageSpinner');
+  const imageStatus = document.getElementById('imageStatus');
+    const MAX_IMAGE_BYTES = 400 * 1024; // 400 KB
+    const DOWNSCALE_THRESHOLD = 200 * 1024; // start compressing if larger than 200 KB
+
+    // Helper: compress / downscale an image File to a Data URL under maxBytes when possible.
+    // - honors EXIF orientation
+    // - attempts WebP first (if supported) then JPEG
+    // - uses binary-search on quality for tighter size targeting
+    function compressFileForLocalStorage(file, maxBytes, maxWidth) {
+      // parse EXIF orientation from a JPEG ArrayBuffer (returns 1-8 or -1/0 when unknown)
+      function getOrientationFromArrayBuffer(arrayBuffer) {
+        try {
+          const view = new DataView(arrayBuffer);
+          if (view.getUint16(0) !== 0xFFD8) return -1; // not a JPEG
+          let offset = 2;
+          const length = view.byteLength;
+          while (offset < length) {
+            if (view.getUint16(offset) === 0xFFE1) {
+              const exifLength = view.getUint16(offset + 2);
+              const exifStart = offset + 4;
+              // check for 'Exif\0\0'
+              if (view.getUint32(exifStart) !== 0x45786966) break;
+              const little = view.getUint16(exifStart + 6) === 0x4949;
+              const tags = view.getUint16(exifStart + 10, little);
+              let tagOffset = exifStart + 12;
+              for (let i = 0; i < tags; i++) {
+                const tag = view.getUint16(tagOffset, little);
+                if (tag === 0x0112) {
+                  const orient = view.getUint16(tagOffset + 8, little);
+                  return orient;
+                }
+                tagOffset += 12;
+              }
+              break;
+            }
+            offset += 2 + view.getUint16(offset + 2);
+          }
+        } catch (e) {
+          return -1;
+        }
+        return -1;
+      }
+
+      function applyOrientationToCanvas(ctx, width, height, orientation) {
+        switch (orientation) {
+          case 2: ctx.translate(width, 0); ctx.scale(-1, 1); break; // horizontal flip
+          case 3: ctx.translate(width, height); ctx.rotate(Math.PI); break; // 180
+          case 4: ctx.translate(0, height); ctx.scale(1, -1); break; // vertical flip
+          case 5: ctx.rotate(0.5 * Math.PI); ctx.scale(1, -1); break; // transpose
+          case 6: ctx.rotate(0.5 * Math.PI); ctx.translate(0, -height); break; // rotate 90
+          case 7: ctx.rotate(0.5 * Math.PI); ctx.translate(width, -height); ctx.scale(-1, 1); break; // transverse
+          case 8: ctx.rotate(-0.5 * Math.PI); ctx.translate(-width, 0); break; // rotate 270
+          default: break; // 1 or unknown: no transform
+        }
+      }
+
+      // try to encode canvas to dataURL using binary-search quality; return null if can't get under maxBytes
+      function encodeCanvasBinarySearch(canvas, mimeType, maxBytes) {
+        return new Promise((resolve) => {
+          let low = 0.5, high = 0.95;
+          let best = null;
+          let bestSize = Infinity;
+          let attempts = 0;
+          function attempt() {
+            const q = (low + high) / 2;
+            let dataUrl;
+            try {
+              dataUrl = canvas.toDataURL(mimeType, q);
+            } catch (err) {
+              return resolve(null);
+            }
+            const size = atob(dataUrl.split(',')[1]).length;
+            if (size <= maxBytes) {
+              best = dataUrl; bestSize = size; low = q; // try higher quality
+            } else {
+              high = q; // lower quality
+            }
+            attempts++;
+            if (attempts < 8 && (high - low) > 0.01) return setTimeout(attempt, 0);
+            return resolve(best);
+          }
+          attempt();
+        });
+      }
+
+      return new Promise((resolve, reject) => {
+        // read as ArrayBuffer to get EXIF orientation, and use object URL for image source
+        const arrReader = new FileReader();
+        arrReader.onload = function(ev) {
+          const arrayBuffer = ev.target.result;
+          const orientation = getOrientationFromArrayBuffer(arrayBuffer) || -1;
+          const blobUrl = URL.createObjectURL(file);
+          const img = new Image();
+          img.onload = async function() {
+            try {
+              let iw = img.width, ih = img.height;
+              let targetW = iw, targetH = ih;
+              const rotated = orientation === 5 || orientation === 6 || orientation === 7 || orientation === 8;
+              const maxW = maxWidth || iw;
+              if ((rotated ? ih : iw) > maxW) {
+                // scale keeping aspect ratio
+                const scale = maxW / (rotated ? ih : iw);
+                targetW = Math.round(iw * scale);
+                targetH = Math.round(ih * scale);
+              }
+              const canvas = document.createElement('canvas');
+              // if rotated 90/270, swap canvas dimensions
+              if (orientation === 5 || orientation === 6 || orientation === 7 || orientation === 8) {
+                canvas.width = targetH; canvas.height = targetW;
+              } else {
+                canvas.width = targetW; canvas.height = targetH;
+              }
+              const ctx = canvas.getContext('2d');
+              // apply orientation transforms
+              ctx.save();
+              // translate/rotate according to orientation before drawing
+              switch (orientation) {
+                case 2: ctx.translate(canvas.width, 0); ctx.scale(-1, 1); break;
+                case 3: ctx.translate(canvas.width, canvas.height); ctx.rotate(Math.PI); break;
+                case 4: ctx.translate(0, canvas.height); ctx.scale(1, -1); break;
+                case 5: ctx.rotate(0.5 * Math.PI); ctx.scale(1, -1); break;
+                case 6: ctx.rotate(0.5 * Math.PI); ctx.translate(0, -canvas.height); break;
+                case 7: ctx.rotate(0.5 * Math.PI); ctx.translate(canvas.width, -canvas.height); ctx.scale(-1, 1); break;
+                case 8: ctx.rotate(-0.5 * Math.PI); ctx.translate(-canvas.width, 0); break;
+                default: break;
+              }
+              // draw the image scaled into canvas
+              // compute draw dimensions after transforms
+              if (orientation === 5 || orientation === 6 || orientation === 7 || orientation === 8) {
+                ctx.drawImage(img, 0, 0, targetW, targetH);
+              } else {
+                ctx.drawImage(img, 0, 0, targetW, targetH);
+              }
+              ctx.restore();
+
+              // First try WebP then JPEG
+              const tryFormats = ['image/webp', 'image/jpeg'];
+              for (const fmt of tryFormats) {
+                // quick test for webp support: attempt toDataURL in try/catch
+                try {
+                  const dataUrlTest = canvas.toDataURL(fmt, 0.9);
+                  // try binary-search quality to find acceptable size
+                  const encoded = await encodeCanvasBinarySearch(canvas, fmt, maxBytes);
+                  if (encoded) {
+                    URL.revokeObjectURL(blobUrl);
+                    return resolve(encoded);
+                  }
+                } catch (err) {
+                  // format not supported or failed; try next
+                  continue;
+                }
+              }
+              // if none produced acceptable size, resolve null
+              URL.revokeObjectURL(blobUrl);
+              return resolve(null);
+            } catch (ex) {
+              URL.revokeObjectURL(blobUrl);
+              return reject(ex);
+            }
+          };
+          img.onerror = function() { URL.revokeObjectURL(blobUrl); reject(new Error('Image load failed')); };
+          img.src = blobUrl;
+        };
+        arrReader.onerror = function() { reject(new Error('File read failed')); };
+        arrReader.readAsArrayBuffer(file);
+      });
+    }
+
+    imageFileInput.addEventListener('change', (e) => {
+      imageErrorEl && (imageErrorEl.style.display = 'none');
+      const file = (e.target.files && e.target.files[0]) ? e.target.files[0] : null;
+      if (!file) {
+        if (imageDataField) imageDataField.value = '';
+        if (imagePreview) { imagePreview.src = ''; imagePreview.style.display = 'none'; }
+        if (clearImageBtn) clearImageBtn.style.display = 'none';
+        // trigger autosave to persist cleared state
+        form.dispatchEvent(new Event('input', { bubbles: true }));
+        return;
+      }
+      // If file is moderately large, attempt to compress / downscale before saving
+      if (file.size > MAX_IMAGE_BYTES) {
+        // If it's too large even before trying, attempt compression if it's over the downscale threshold
+        if (file.size > DOWNSCALE_THRESHOLD) {
+          if (imageSpinner) imageSpinner.style.display = 'inline-block';
+          if (imageStatus) imageStatus.textContent = 'Compressing image…';
+          compressFileForLocalStorage(file, MAX_IMAGE_BYTES, 1024).then((compressedDataUrl) => {
+            // check final size
+            if (!compressedDataUrl) {
+              if (imageSpinner) imageSpinner.style.display = 'none';
+              if (imageStatus) imageStatus.textContent = '';
+              if (imageErrorEl) { imageErrorEl.textContent = `Image could not be reduced below ${Math.round(MAX_IMAGE_BYTES/1024)} KB. Please choose a smaller image.`; imageErrorEl.style.display = 'block'; }
+              imageFileInput.value = '';
+              return;
+            }
+            const sizeApprox = atob(compressedDataUrl.split(',')[1]).length;
+            if (sizeApprox > MAX_IMAGE_BYTES) {
+              if (imageSpinner) imageSpinner.style.display = 'none';
+              if (imageErrorEl) { imageErrorEl.textContent = `Image could not be reduced below ${Math.round(MAX_IMAGE_BYTES/1024)} KB. Please choose a smaller image.`; imageErrorEl.style.display = 'block'; }
+              imageFileInput.value = '';
+              return;
+            }
+            // use compressed
+            if (imageDataField) imageDataField.value = compressedDataUrl;
+            if (imagePreview) { imagePreview.src = compressedDataUrl; imagePreview.style.display = 'inline-block'; }
+            if (clearImageBtn) clearImageBtn.style.display = 'inline-block';
+            const data = Object.fromEntries(new FormData(form).entries());
+            data.courses = (data.courses && Array.isArray(data.courses)) ? data.courses : undefined;
+            localStorage.setItem('introData', JSON.stringify(data));
+            if (imageSpinner) imageSpinner.style.display = 'none';
+            if (imageStatus) imageStatus.textContent = 'Image ready.';
+            setTimeout(() => { if (imageStatus) imageStatus.textContent = ''; }, 1200);
+            renderIntro(data);
+          }).catch((err) => {
+            if (imageSpinner) imageSpinner.style.display = 'none';
+            if (imageStatus) imageStatus.textContent = '';
+            if (imageErrorEl) { imageErrorEl.textContent = 'Could not process image. Try a different file.'; imageErrorEl.style.display = 'block'; }
+            imageFileInput.value = '';
+          });
+          return;
+        }
+        // otherwise reject large file immediately
+        if (imageErrorEl) { imageErrorEl.textContent = `Image is too large (${Math.round(file.size/1024)} KB). Max ${Math.round(MAX_IMAGE_BYTES/1024)} KB.`; imageErrorEl.style.display = 'block'; }
+        imageFileInput.value = '';
+        return;
+      }
+      // small enough: read as DataURL and store
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const dataUrl = evt.target.result;
+        if (imageDataField) imageDataField.value = dataUrl;
+        // show preview
+        if (imagePreview) { imagePreview.src = dataUrl; imagePreview.style.display = 'inline-block'; }
+        if (clearImageBtn) clearImageBtn.style.display = 'inline-block';
+        // persist immediately
+        const data = Object.fromEntries(new FormData(form).entries());
+        data.courses = (data.courses && Array.isArray(data.courses)) ? data.courses : undefined;
+        localStorage.setItem('introData', JSON.stringify(data));
+        renderIntro(data);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Clear uploaded image handler
+    if (clearImageBtn) {
+      clearImageBtn.addEventListener('click', () => {
+        if (imageFileInput) imageFileInput.value = '';
+        if (imageDataField) imageDataField.value = '';
+        if (imagePreview) { imagePreview.src = ''; imagePreview.style.display = 'none'; }
+        clearImageBtn.style.display = 'none';
+        // persist cleared state
+        const data = Object.fromEntries(new FormData(form).entries());
+        localStorage.setItem('introData', JSON.stringify(data));
+        renderIntro(data);
+      });
+    }
+  }
+
   // wire top buttons to existing handlers (delegation)
-  if (submitTopBtn) submitTopBtn.addEventListener('click', () => {
-    // trigger form submit
-    form.requestSubmit ? form.requestSubmit() : form.submit();
-  });
-  if (loadSampleTopBtn && loadSampleBtn) loadSampleTopBtn.addEventListener('click', () => loadSampleBtn.click());
-  if (resetTopBtn && resetBtn) resetTopBtn.addEventListener('click', () => resetBtn.click());
+  if (submitTopBtn) submitTopBtn.addEventListener('click', (e) => { e.preventDefault(); form.requestSubmit ? form.requestSubmit() : form.submit(); });
+  if (loadSampleTopBtn && loadSampleBtn) loadSampleTopBtn.addEventListener('click', (e) => { e.preventDefault(); loadSampleBtn.click(); });
+  if (resetTopBtn && resetBtn) resetTopBtn.addEventListener('click', (e) => { e.preventDefault(); resetBtn.click(); });
+  // bottom text links: prevent default and call handlers
+  const submitBtn = document.getElementById('submitBtn');
+  const loadSampleBtnLink = document.getElementById('loadSampleBtn');
+  const resetBtnLink = document.getElementById('resetBtn');
+  if (submitBtn) submitBtn.addEventListener('click', (e) => { e.preventDefault(); form.requestSubmit ? form.requestSubmit() : form.submit(); });
+  if (loadSampleBtnLink && loadSampleBtn) loadSampleBtnLink.addEventListener('click', (e) => { e.preventDefault(); loadSampleBtn.click(); });
+  if (resetBtnLink && resetBtn) resetBtnLink.addEventListener('click', (e) => { e.preventDefault(); resetBtn.click(); });
 
   // Courses: helper to add/remove rows
   function addCourseRow(course = {}, index = null) {
@@ -205,31 +479,47 @@ window.addEventListener("load", () => {
     const reason = document.createElement('input'); reason.name = 'course_reason'; reason.placeholder = 'Reason for taking'; reason.value = course.reason || '';
   const actions = document.createElement('div'); actions.className = 'col-actions';
   // Move Up / Move Down buttons for keyboard accessibility
-  const moveUpBtn = document.createElement('button'); moveUpBtn.type = 'button'; moveUpBtn.className = 'move-up'; moveUpBtn.title = 'Move row up'; moveUpBtn.textContent = '↑';
+  const moveUpBtn = document.createElement('button'); moveUpBtn.type = 'button'; moveUpBtn.className = 'move-up'; moveUpBtn.title = 'Move course up'; moveUpBtn.setAttribute('aria-label', 'Move course up');
+  moveUpBtn.innerHTML = '<svg class="icon-action" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 19V6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 12l7-7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   moveUpBtn.addEventListener('click', () => {
     const prev = row.previousElementSibling;
     const table = document.getElementById('coursesTable');
     if (prev && prev.classList.contains('course-row')) {
       table.insertBefore(row, prev);
-      reindexCourseRows();
-      // keep focus on the first input
-      const f = row.querySelector('input[name="course_dept"]') || row.querySelector('input'); if (f) f.focus();
+    } else {
+      // if there is no previous row (this is the first), move it to the end
+      table.appendChild(row);
     }
+    reindexCourseRows();
+    // keep focus on the first input
+    const f = row.querySelector('input[name="course_dept"]') || row.querySelector('input'); if (f) f.focus();
   });
-  const moveDownBtn = document.createElement('button'); moveDownBtn.type = 'button'; moveDownBtn.className = 'move-down'; moveDownBtn.title = 'Move row down'; moveDownBtn.textContent = '↓';
-  moveDownBtn.addEventListener('click', () => {
-    const next = row.nextElementSibling;
+  const addBelowBtn = document.createElement('button');
+  addBelowBtn.type = 'button';
+  addBelowBtn.className = 'add-below-btn';
+  addBelowBtn.title = 'Add course below';
+  addBelowBtn.setAttribute('aria-label', 'Add course below');
+  addBelowBtn.innerHTML = '<svg class="icon-action" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 5v14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  addBelowBtn.addEventListener('click', () => {
     const table = document.getElementById('coursesTable');
+    // create new row (appends to end), then move it to just after this row
+    const newRow = addCourseRow({});
+    const next = row.nextElementSibling;
     if (next && next.classList.contains('course-row')) {
-      table.insertBefore(next, row);
-      reindexCourseRows();
-      const f = row.querySelector('input[name="course_dept"]') || row.querySelector('input'); if (f) f.focus();
+      table.insertBefore(newRow, next);
     }
+    reindexCourseRows();
+    const f = newRow.querySelector('input[name="course_dept"]') || newRow.querySelector('input'); if (f) f.focus();
   });
-  const removeBtn = document.createElement('button'); removeBtn.type = 'button'; removeBtn.textContent = 'Remove';
+  const removeBtn = document.createElement('button');
+  removeBtn.type = 'button';
+  removeBtn.className = 'remove-btn';
+  removeBtn.title = 'Remove course';
+  removeBtn.setAttribute('aria-label', 'Remove course');
+  removeBtn.innerHTML = '<svg class="icon-action" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 18L18 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   removeBtn.addEventListener('click', () => { row.remove(); reindexCourseRows(); });
   actions.appendChild(moveUpBtn);
-  actions.appendChild(moveDownBtn);
+  actions.appendChild(addBelowBtn);
   actions.appendChild(removeBtn);
   // per-row inline error message
   const rowError = document.createElement('div'); rowError.className = 'row-error'; rowError.setAttribute('aria-live', 'polite'); rowError.style.display = 'none';
@@ -320,11 +610,9 @@ window.addEventListener("load", () => {
     rows.forEach((r, i) => {
       const num = r.querySelector('.col-num');
       if (num) num.textContent = String(i + 1);
-      // disable/enable move buttons appropriately
+      // move-up now wraps to bottom, so keep it enabled; remove move-down (no longer used)
       const up = r.querySelector('button.move-up');
-      const down = r.querySelector('button.move-down');
-      if (up) up.disabled = (i === 0);
-      if (down) down.disabled = (i === rows.length - 1);
+      if (up) up.disabled = false;
     });
     const count = rows.length;
     const hidden = document.getElementById('coursesCount');
@@ -354,6 +642,8 @@ window.addEventListener("load", () => {
     if (!jsonArea) return;
     navigator.clipboard.writeText(jsonArea.value).then(() => {
       if (jsonStatus) { jsonStatus.textContent = 'Copied'; setTimeout(() => jsonStatus.textContent = '', 1500); }
+      // swap icon to check
+      swapIconToCheck(copyJsonBtn);
     }).catch(() => { if (jsonStatus) jsonStatus.textContent = 'Copy failed'; });
   });
   if (copyHtmlBtn) copyHtmlBtn.addEventListener('click', () => {
@@ -361,8 +651,21 @@ window.addEventListener("load", () => {
     if (!htmlArea) return;
     navigator.clipboard.writeText(htmlArea.value).then(() => {
       if (htmlStatus) { htmlStatus.textContent = 'Copied'; setTimeout(() => htmlStatus.textContent = '', 1500); }
+      swapIconToCheck(copyHtmlBtn);
     }).catch(() => { if (htmlStatus) htmlStatus.textContent = 'Copy failed'; });
   });
+
+  // Helper to swap the inline SVG in a button to a checkmark briefly
+  function swapIconToCheck(button) {
+    if (!button) return;
+    const original = button.innerHTML;
+    // simple checkmark SVG
+    const check = '<svg class="icon-check" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    button.innerHTML = check;
+    // add class to trigger CSS animation/color change
+    button.classList.add('copied');
+    setTimeout(() => { button.classList.remove('copied'); button.innerHTML = original; }, 1500);
+  }
 
   // validation UI attached near add button
   const coursesValidation = document.getElementById('coursesValidation') || (() => {
@@ -432,8 +735,9 @@ window.addEventListener("load", () => {
       (function combineMascot(d) {
         const desc = (form.elements['mascotDescriptor'] || {}).value || '';
         const masc = (form.elements['mascot'] || {}).value || '';
-        const combined = [desc.trim(), masc.trim()].filter(Boolean).join(' ').trim();
-        if (combined) d.mascot = combined;
+        // preserve descriptor and mascot as separate fields so mascot stays just the mascot (e.g., "Hippo")
+        if (masc.trim()) d.mascot = masc.trim();
+        if (desc.trim()) d.mascotDescriptor = desc.trim();
       })(data);
       // collect courses into an array
       const courses = [];
@@ -465,8 +769,8 @@ form.addEventListener("submit", function(e) {
   (function combineMascot(d) {
     const desc = (form.elements['mascotDescriptor'] || {}).value || '';
     const masc = (form.elements['mascot'] || {}).value || '';
-    const combined = [desc.trim(), masc.trim()].filter(Boolean).join(' ').trim();
-    if (combined) d.mascot = combined;
+    if (masc.trim()) d.mascot = masc.trim();
+    if (desc.trim()) d.mascotDescriptor = desc.trim();
   })(data);
   // gather courses similarly for submit
   const courses = [];
@@ -509,22 +813,21 @@ function renderIntro(data) {
   const frag = document.createDocumentFragment();
 
   // Header and acknowledgment
-  const nameParts = [];
-  if (data.firstName) nameParts.push(data.firstName);
-  if (data.middleName) nameParts.push(data.middleName);
-  if (data.lastName) nameParts.push(data.lastName);
-  const fullNameComputed = nameParts.join(' ');
-  frag.appendChild(el('h2', null, fullNameComputed || data.fullName || ''));
-  const metaP = document.createElement('p');
-  metaP.className = 'italic';
+  // First line: Last, First M.
+  const last = (data.lastName || '').toString().trim();
+  const first = (data.firstName || '').toString().trim();
+  const middle = (data.middleName || '').toString().trim();
+  const middleInitial = middle ? (middle[0] + '.') : '';
+  const line1 = last ? `${last}, ${first}${middleInitial ? ' ' + middleInitial : ''}` : `${first} ${middleInitial}`.trim();
+  frag.appendChild(el('h2', 'name-line', line1 || ''));
+  const metaP = document.createElement('p'); metaP.className = 'italic';
   const metaParts = [];
   if (data.email) metaParts.push(data.email);
   metaP.textContent = metaParts.join(' \u2022 ');
   frag.appendChild(metaP);
   frag.appendChild(el('p', 'italic', data.acknowledgment || ''));
 
-  // display name and mascot
-  // prefer explicit displayName, otherwise compose First M. "Nickname" Last and append mascot
+  // display name as a prominent H3
   const displayLine = (function() {
     if (data.displayName && data.displayName.trim()) return data.displayName.trim();
     const parts = [];
@@ -534,18 +837,34 @@ function renderIntro(data) {
     if (data.lastName) parts.push(data.lastName);
     return parts.filter(Boolean).join(' ');
   })();
-  frag.appendChild(el('p', 'centered large', `${displayLine} ${data.mascot ? ' ~ ' + data.mascot : ''}`));
-
-  // image
-  if (data.imageUrl) {
-    const img = document.createElement('img');
-    img.src = data.imageUrl;
-    img.alt = 'Profile Picture';
-    img.onerror = function() { this.style.display = 'none'; };
-    img.className = 'profile-image';
-    frag.appendChild(img);
+  // If the computed displayLine already contains the mascot, replace that first occurrence
+  // with the mascotDescriptor (if provided) so the mascot only appears once and the
+  // descriptor is shown in the first position.
+  let displayBase = displayLine || '';
+  if (data.mascot && displayBase && displayBase.indexOf(data.mascot) !== -1) {
+    const desc = (data.mascotDescriptor || '').toString().trim();
+    if (desc) {
+      // replace only the first occurrence
+      displayBase = displayBase.replace(data.mascot, desc);
+    } else {
+      // remove the duplicated mascot occurrence to avoid repetition
+      displayBase = displayBase.replace(data.mascot, '').replace(/\s*~\s*$/, '').trim();
+    }
   }
-  frag.appendChild(el('p', 'centered italic', data.caption || ''));
+  const finalDisplay = `${displayBase} ${data.mascot ? ' ~ ' + data.mascot : ''}`.trim();
+  frag.appendChild(el('h3', 'display-name', finalDisplay));
+
+  // image and caption in a centered figure
+  // Prefer uploaded image data (Data URL) -> explicit imageUrl -> fallback sample/random
+  const chosenImageSrc = data.imageData && data.imageData.trim() ? data.imageData.trim() : (data.imageUrl && data.imageUrl.trim() ? data.imageUrl.trim() : 'https://picsum.photos/300?random=1');
+  if (chosenImageSrc || data.caption) {
+    const fig = document.createElement('figure'); fig.className = 'profile-figure';
+    if (chosenImageSrc) {
+      const img = document.createElement('img'); img.src = chosenImageSrc; img.alt = 'Profile Picture'; img.onerror = function() { this.style.display = 'none'; }; img.className = 'profile-image'; fig.appendChild(img);
+    }
+    if (data.caption) { const fc = document.createElement('figcaption'); fc.className = 'italic'; fc.textContent = data.caption; fig.appendChild(fc); }
+    frag.appendChild(fig);
+  }
   frag.appendChild(el('p', null, data.personalStatement || ''));
 
   const list = document.createElement('ul');
@@ -572,7 +891,21 @@ function renderIntro(data) {
     if (platform) parts.push(platform);
     if (os) parts.push(os);
     if (location) parts.push(`Location: ${location}`);
-    addListItem('Primary Computer (details):', parts.join(' — '));
+    // create primary computer li so backup plan can be nested below
+    const li = document.createElement('li');
+    const strong = document.createElement('strong'); strong.textContent = 'Primary Computer (details):';
+    li.appendChild(strong);
+    li.appendChild(document.createTextNode(' ' + parts.join(' — ')));
+    list.appendChild(li);
+  }
+
+  // Render Backup Plan as a sibling list item (not nested under Primary Computer)
+  if (backup) {
+    const bLi = document.createElement('li');
+    const bStrong = document.createElement('strong'); bStrong.textContent = 'Backup Plan:';
+    bLi.appendChild(bStrong);
+    bLi.appendChild(document.createTextNode(' ' + backup));
+    list.appendChild(bLi);
   }
 
   // Courses: prefer the structured courses array if present
@@ -581,30 +914,34 @@ function renderIntro(data) {
     const coursesStrong = document.createElement('strong');
     coursesStrong.textContent = "Courses I\u2019m Taking & Why:";
     coursesLi.appendChild(coursesStrong);
-    const coursesUl = document.createElement('ul');
+    const coursesOl = document.createElement('ol');
     data.courses.forEach(c => {
       const cli = document.createElement('li');
       const title = `${c.dept || ''} ${c.number || ''} — ${c.name || ''}`.trim();
-      cli.textContent = `${title}: ${c.reason || ''}`;
-      coursesUl.appendChild(cli);
+      const strong = document.createElement('strong'); strong.textContent = title + ':';
+      cli.appendChild(strong);
+      cli.appendChild(document.createTextNode(' ' + (c.reason || '')));
+      coursesOl.appendChild(cli);
     });
-    coursesLi.appendChild(coursesUl);
+    coursesLi.appendChild(coursesOl);
     list.appendChild(coursesLi);
   } else {
     const coursesLi = document.createElement('li');
     const coursesStrong = document.createElement('strong');
     coursesStrong.textContent = "Courses I\u2019m Taking & Why:";
     coursesLi.appendChild(coursesStrong);
-    const coursesUl = document.createElement('ul');
+    const coursesOl = document.createElement('ol');
     const course = (code, value) => {
       const cli = document.createElement('li');
-      cli.textContent = `${code}: ${value || ''}`;
-      coursesUl.appendChild(cli);
+      const strong = document.createElement('strong'); strong.textContent = code + ':';
+      cli.appendChild(strong);
+      cli.appendChild(document.createTextNode(' ' + (value || '')));
+      coursesOl.appendChild(cli);
     };
     course('CRS101', data.crs101);
     course('CRS201', data.crs201);
     course('CRS330', data.crs330);
-    coursesLi.appendChild(coursesUl);
+    coursesLi.appendChild(coursesOl);
     list.appendChild(coursesLi);
   }
 
@@ -616,31 +953,29 @@ function renderIntro(data) {
   const additionalPieces = [];
   if (data.additionalInfo) additionalPieces.push(data.additionalInfo);
   if (data.otherNotes) additionalPieces.push(data.otherNotes);
-  if (additionalPieces.length) addListItem('Additional:', additionalPieces.join(' — '));
+  if (additionalPieces.length) addListItem("I'd Also Like to Share:", additionalPieces.join(' — '));
+
+  // Backup plan is nested under Primary Computer (if present) to keep related info together
 
   frag.appendChild(list);
 
   if (data.quoteText || data.quoteAuthor) {
     const p = document.createElement('p');
-    p.className = 'centered';
+    p.className = 'quote centered';
     p.textContent = `"${data.quoteText || ''}"`;
-    p.appendChild(document.createElement('br'));
-    const dashAndAuthor = document.createElement('span');
-    dashAndAuthor.innerHTML = '– ';
-    const author = document.createElement('span');
-    author.className = 'italic';
-    author.textContent = data.quoteAuthor || '';
-    p.appendChild(dashAndAuthor);
-    p.appendChild(author);
     frag.appendChild(p);
+    if (data.quoteAuthor) {
+      const authorDiv = document.createElement('div');
+      authorDiv.className = 'quote-author italic centered';
+      authorDiv.textContent = `– ${data.quoteAuthor}`;
+      frag.appendChild(authorDiv);
+    }
   }
 
   if (data.languages) {
     frag.appendChild(el('p', null, `Languages: ${data.languages}`));
   }
-  if (backup) {
-    frag.appendChild(el('p', null, `Backup Plan: ${backup}`));
-  }
+  // backup is included above as a separate list item when present
 
   // render to output container
   output.innerHTML = '';

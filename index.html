@@ -7,31 +7,32 @@
   <link rel="stylesheet" href="styles/default.css" />
 </head>
 <body>
-  <h1>Course Introduction Form</h1>
+  <h1>Introduction Form</h1>
+  <h2 class="page-subtitle">Introduction Play</h2>
   <div class="workspace">
     <div class="col form-col">
       <form id="introForm" aria-labelledby="formTitle">
         <div class="top-actions">
-          <button type="button" id="submitTopBtn" class="texty-btn">Generate Webpage</button>
-          <button type="button" id="loadSampleTopBtn" class="texty-btn">Load Sample</button>
-          <button type="button" id="resetTopBtn" class="texty-btn">Clear</button>
+          <a href="#" id="submitTopBtn" class="text-link" role="button">Generate Webpage</a>
+          <a href="#" id="loadSampleTopBtn" class="text-link" role="button">Load Sample</a>
+          <a href="#" id="resetTopBtn" class="text-link" role="button">Clear</a>
         </div>
+    <fieldset aria-label="Name">
+      <legend>Name:</legend>
+      <div class="name-row">
+        <label for="firstName">First</label>
+        <input id="firstName" name="firstName" type="text" value="Inti" />
+        <label for="middleName">Middle</label>
+        <input id="middleName" name="middleName" type="text" value="Amaru" />
+        <label for="lastName">Last</label>
+        <input id="lastName" name="lastName" type="text" value="Quispe" />
+        <label for="preferredName">Nickname</label>
+        <input id="preferredName" name="preferredName" type="text" value="Code-Alpaca" />
+      </div>
+    </fieldset>
+
     <fieldset>
       <legend id="formTitle">Personal information</legend>
-
-      <fieldset aria-label="Name">
-        <legend>Name</legend>
-        <div class="name-row">
-          <label for="firstName">First</label>
-          <input id="firstName" name="firstName" type="text" value="Inti" />
-          <label for="middleName">Middle</label>
-          <input id="middleName" name="middleName" type="text" value="Amaru" />
-          <label for="lastName">Last</label>
-          <input id="lastName" name="lastName" type="text" value="Quispe" />
-          <label for="preferredName">Nickname</label>
-          <input id="preferredName" name="preferredName" type="text" value="Code-Alpaca" />
-        </div>
-      </fieldset>
 
       <div class="short-field mascot-pair">
         <label for="mascotDescriptor">Mascot Descriptor</label>
@@ -52,9 +53,17 @@
         <label for="acknowledgment">Initials and Date (e.g., JA - 09/26/2025):</label>
         <input id="acknowledgment" name="acknowledgment" type="text" value="IQ - 09/26/2025" />
       </div>
-      <div class="short-field">
+      <div class="short-field image-input-inline">
         <label for="imageUrl">Image URL:</label>
         <input id="imageUrl" name="imageUrl" type="url" placeholder="https://..." value="https://picsum.photos/300?random=1" />
+        <span class="or-sep">or</span>
+        <input id="imageFile" name="imageFile" type="file" accept="image/*" />
+        <button type="button" id="clearImageBtn" class="text-link" style="display:none;">Clear Image</button>
+        <input type="hidden" id="imageData" name="imageData" />
+        <img id="imagePreview" class="image-preview" alt="Uploaded preview" style="display:none;" />
+        <div id="imageSpinner" class="image-spinner" style="display:none;" aria-hidden="true" title="Compressing image"></div>
+        <div id="imageError" class="row-error" aria-live="polite" style="display:none;margin-left:0.25rem;"></div>
+        <div id="imageStatus" class="visually-hidden" role="status" aria-live="polite" aria-atomic="true"></div>
       </div>
       <div class="short-field">
         <label for="caption">Image Caption:</label>
@@ -128,9 +137,9 @@
         <label>Courses (add or remove rows):</label>
         <div id="coursesTable">
           <div class="courses-header">
-            <div class="col-num">#</div>
-            <div class="col-dept">Department</div>
-            <div class="col-number">Course #</div>
+            <div class="col-num"></div>
+              <div class="col-dept">Department</div>
+              <div class="col-number">#</div>
             <div class="col-name">Course Name</div>
             <div class="col-reason">Reason for taking</div>
             <div class="col-actions"></div>
@@ -138,7 +147,7 @@
           <!-- rows will be inserted here -->
         </div>
         <div style="margin-top:0.5rem;">
-          <button type="button" id="addCourseBtn">Add course</button>
+          <!-- Global add button removed: use per-row + and x buttons to add and remove class entries -->
         </div>
       </div>
       <input type="hidden" id="coursesCount" name="coursesCount" value="0" />
@@ -148,10 +157,10 @@
 
     
 
-    <div>
-      <button type="submit">Generate Webpage</button>
-      <button type="button" id="loadSampleBtn">Load Sample</button>
-      <button type="button" id="resetBtn">Clear</button>
+    <div class="bottom-actions">
+      <a href="#" id="submitBtn" class="text-link" role="button">Generate Webpage</a>
+      <a href="#" id="loadSampleBtn" class="text-link" role="button">Load Sample</a>
+      <a href="#" id="resetBtn" class="text-link" role="button">Clear</a>
     </div>
       </form>
     </div>
@@ -164,16 +173,26 @@
   <div class="code-row">
     <div class="code-col">
       <div style="display:flex;align-items:center;gap:0.5rem;">
-        <label for="jsonOutput">JSON Data</label>
-        <button type="button" id="copyJsonBtn" class="copy-btn">Copy JSON</button>
+  <label for="jsonOutput">JSON Data</label>
+  <button type="button" id="copyJsonBtn" class="copy-btn" title="Copy JSON" aria-label="Copy JSON">
+    <svg class="icon-copy" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect x="9" y="9" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/>
+      <rect x="4" y="4" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/>
+    </svg>
+  </button>
         <span id="copyJsonStatus" class="copy-status" aria-live="polite"></span>
       </div>
       <textarea id="jsonOutput" readonly></textarea>
     </div>
     <div class="code-col">
       <div style="display:flex;align-items:center;gap:0.5rem;">
-        <label for="htmlOutput">HTML (main content)</label>
-        <button type="button" id="copyHtmlBtn" class="copy-btn">Copy HTML</button>
+  <label for="htmlOutput">HTML (main content)</label>
+  <button type="button" id="copyHtmlBtn" class="copy-btn" title="Copy HTML" aria-label="Copy HTML">
+    <svg class="icon-copy" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect x="9" y="9" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/>
+      <rect x="4" y="4" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/>
+    </svg>
+  </button>
         <span id="copyHtmlStatus" class="copy-status" aria-live="polite"></span>
       </div>
       <textarea id="htmlOutput" readonly></textarea>

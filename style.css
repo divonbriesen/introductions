@@ -1,6 +1,14 @@
+h1, h2 {
+  text-align: center;
+}
+/* Use a nicer system UI sans-serif stack */
 body {
-  font-family: Arial, sans-serif;
+  font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   margin: 2em;
+}
+/* headings default alignment */
+h1, h2 {
+  text-align: center;
 }
 h1, h2 {
   text-align: center;
