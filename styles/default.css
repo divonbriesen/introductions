@@ -514,6 +514,13 @@ h1 input[type="text"] {
     min-height: 3.2rem;
 }
 
+#quoteAuthor {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 0.2rem;
+}
+
 @media (max-width: 700px) {
     #personalStatement, #quoteText { width: 100%; }
 }
