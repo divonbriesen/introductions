@@ -31,14 +31,18 @@
       </div>
     </fieldset>
 
-    <fieldset>
+    <fieldset class="name-row">
       <legend id="formTitle">Personal information</legend>
 
-      <div class="short-field mascot-pair">
-        <label for="mascotDescriptor">Mascot Descriptor</label>
-        <input id="mascotDescriptor" name="mascotDescriptor" type="text" placeholder="e.g., Peruvian Coding" value="Peruvian Coding" />
-        <label for="mascot" class="visually-hidden">Mascot</label>
-        <input id="mascot" name="mascot" type="text" placeholder="e.g., Alpaca" value="Alpaca" />
+      <div class="two-column-short">
+        <div class="short-field">
+          <label for="mascotDescriptor">Mascot Descriptor</label>
+          <input id="mascotDescriptor" name="mascotDescriptor" type="text" placeholder="e.g., Peruvian Coding" value="Peruvian Coding" />
+        </div>
+        <div class="short-field">
+          <label for="mascot">Mascot</label>
+          <input id="mascot" name="mascot" type="text" placeholder="e.g., Alpaca" value="Alpaca" />
+        </div>
       </div>
       <div class="short-field">
         <label for="displayName">Display Name (First M. "Nickname" Last):</label>
@@ -73,16 +77,20 @@
 
     <fieldset>
       <legend>Personal statement</legend>
+      <label for="personalStatement" class="fieldset-label">Write a few sentences about yourself:</label>
       <div>
-        <label for="personalStatement">Personal Statement:</label>
         <textarea id="personalStatement" name="personalStatement" rows="2">I'm a developer and educator who loves teaching people how to reason with code and algorithms. I enjoy hands-on projects, open-source collaboration, and coffee while debugging.</textarea>
       </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Favorite Quote</legend>
+      <label for="quoteText" class="fieldset-label">Favorite Quote:</label>
       <div>
-        <label for="quoteText">Favorite Quote:</label>
-        <textarea id="quoteText" name="quoteText" rows="1">Simplicity is the soul of efficiency.</textarea>
+        <textarea id="quoteText" name="quoteText" rows="2">Simplicity is the soul of efficiency.</textarea>
       </div>
-      <div class="short-field">
-        <label for="quoteAuthor">Quote Author:</label>
+      <label for="quoteAuthor" class="fieldset-label">Author:</label>
+      <div>
         <input id="quoteAuthor" name="quoteAuthor" type="text" value="Ada Lovelace" />
       </div>
     </fieldset>
@@ -90,23 +98,23 @@
     <fieldset>
       <legend>Backgrounds</legend>
       <div>
-        <label for="personalBackground">Personal Background:</label>
+        <label for="personalBackground">Personal:</label>
         <textarea id="personalBackground" name="personalBackground" rows="2">Grew up near the Andes; enjoys trekking, photography, and local cuisine.</textarea>
       </div>
       <div>
-        <label for="professionalBackground">Professional Background:</label>
+        <label for="professionalBackground">Professional:</label>
         <textarea id="professionalBackground" name="professionalBackground" rows="2">5 years as a software engineer, 3 years as a curriculum developer for introductory CS courses.</textarea>
       </div>
       <div>
-        <label for="academicBackground">Academic Background:</label>
+        <label for="academicBackground">Academic:</label>
         <textarea id="academicBackground" name="academicBackground" rows="2">BSc in Computer Science; ongoing study in human-centered computing.</textarea>
       </div>
       <div>
-        <label for="funnyRemember">Something Funny Or Interesting To Remember Me By:</label>
+        <label for="funnyRemember">Interesting/Funny Thing to Remember Me:</label>
         <textarea id="funnyRemember" name="funnyRemember" rows="2">Once taught a class of llamas to debug a loop</textarea>
       </div>
       <div>
-        <label for="otherNotes">Anything Else You'd Like To Add:</label>
+        <label for="otherNotes">Would Also Like to Add:</label>
         <textarea id="otherNotes" name="otherNotes" rows="2">Prefers quinoa snacks and composes multilingual commit messages (12 languages)</textarea>
       </div>
     </fieldset>

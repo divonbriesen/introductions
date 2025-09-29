@@ -183,6 +183,26 @@ h1 input[type="text"] {
     vertical-align: bottom; /* Align with the bottom of the text line */
 }
 
+/* Make Background-area textareas a fixed 450px width on desktop for consistent sizing */
+#personalBackground,
+#professionalBackground,
+#academicBackground,
+#funnyRemember,
+#otherNotes {
+    width: 450px;
+    box-sizing: border-box; /* keep padding inside the width */
+    max-width: none;
+}
+
+@media (max-width: 980px) {
+    /* On smaller screens revert backgrounds to normal flow */
+    #personalBackground,
+    #professionalBackground,
+    #academicBackground,
+    #funnyRemember,
+    #otherNotes { width: 100%; }
+}
+
 /* Layout: form left (~800px) and preview (HTML rendering) on the right */
 .workspace {
     display: flex;
@@ -253,12 +273,12 @@ h1 input[type="text"] {
     align-items: center;
     flex-wrap: wrap;
 }
-.name-row label { margin: 0; }
-.name-row input { box-sizing: border-box; }
+.name-row label { margin: 0; flex: 0 0 auto; margin-right: 0.4rem; }
+.name-row input { box-sizing: border-box; flex: 0 0 auto; }
 .name-row input#firstName,
 .name-row input#middleName,
-.name-row input#lastName { width: 6.5rem; }
-.name-row input#preferredName { width: 9rem; }
+.name-row input#lastName { width: calc(6.5rem * 0.3); }
+.name-row input#preferredName { width: calc(9rem * 0.3); }
 @media (max-width: 700px) {
     .name-row { flex-direction: column; align-items: stretch; }
     .name-row input { width: 100%; }
@@ -272,7 +292,7 @@ h1 input[type="text"] {
     flex-wrap: wrap;
 }
 .image-input-inline label { margin: 0; white-space: nowrap; }
-.image-input-inline input[type="url"] { flex: 1 1 40%; min-width: 160px; }
+.image-input-inline input[type="url"] { flex: 0 0 30%; width: 30%; min-width: 120px; }
 .image-input-inline input[type="file"] { flex: 0 0 auto; }
 .image-input-inline .or-sep { color: #8b3e18; font-weight: 700; margin: 0 0.25rem; }
 
@@ -285,16 +305,19 @@ h1 input[type="text"] {
 }
 .short-field label {
     margin-top: 0;
-    flex: 0 0 28%;
-    max-width: 28%;
+    flex: 0 0 auto; /* size to content so input sits immediately to the right */
+    max-width: none;
     white-space: nowrap;
+    margin-right: 0.5rem;
 }
 .short-field input,
 .short-field textarea {
-    flex: 1 1 auto;
-    width: 100%;
+    /* shrink short inputs to ~30% of available width (70% shorter)
+       while keeping a sensible minimum so they remain usable */
+    flex: 0 0 30%;
+    width: 30%;
     max-width: none;
-    min-width: 0; /* allow flex children to shrink properly */
+    min-width: 4.5rem; /* usable on small screens */
     box-sizing: border-box;
 }
 .short-field small {
@@ -319,6 +342,20 @@ h1 input[type="text"] {
         max-width: none;
         width: 100%;
     }
+}
+
+/* Two-column short-field grouping (e.g., Mascot Descriptor + Mascot) */
+.two-column-short {
+    display: flex;
+    gap: 0.6rem;
+    align-items: flex-start;
+}
+.two-column-short .short-field {
+    flex: 1 1 48%;
+}
+@media (max-width: 720px) {
+    .two-column-short { flex-direction: column; }
+    .two-column-short .short-field { width: 100%; }
 }
 
 /* Uploaded image preview and clear control */
@@ -460,3 +497,23 @@ h1 input[type="text"] {
 }
 .add-below-btn:hover { background: rgba(0,128,0,0.06); }
 .add-below-btn:focus { outline: 2px solid rgba(0,128,0,0.2); }
+
+/* Fieldset label above controls (full-width) */
+.fieldset-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+    color: #5a3220;
+}
+
+/* Make the personal statement and quote textareas span the fieldset width on desktop */
+#personalStatement,
+#quoteText {
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 3.2rem;
+}
+
+@media (max-width: 700px) {
+    #personalStatement, #quoteText { width: 100%; }
+}
