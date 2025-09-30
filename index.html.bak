@@ -5,24 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Course Introduction Generator</title>
   <link rel="stylesheet" href="styles/default.css" />
-  <!-- Inline transparent favicon to avoid browser 404 for /favicon.ico -->
-  <link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=" />
 </head>
 <body>
   <h1>Introduction Form</h1>
   <h2 class="page-subtitle">Introduction Play</h2>
   <div class="workspace">
     <div class="col form-col">
-      <h3>Form</h3>
       <form id="introForm" aria-labelledby="formTitle">
-        <div>
-          <a href="#" id="submitTopBtn" role="button">Generate Webpage</a>
-          <a href="#" id="loadSampleTopBtn" role="button">Load Sample</a>
-          <a href="#" id="resetTopBtn" role="button">Clear</a>
+        <div class="top-actions">
+          <a href="#" id="submitTopBtn" class="text-link" role="button">Generate Webpage</a>
+          <a href="#" id="loadSampleTopBtn" class="text-link" role="button">Load Sample</a>
+          <a href="#" id="resetTopBtn" class="text-link" role="button">Clear</a>
         </div>
-  <fieldset aria-label="Name">
+    <fieldset aria-label="Name">
       <legend>Name:</legend>
-        <div>
+        <div class="name-row">
         <label for="firstName">First:</label>
         <input id="firstName" name="firstName" type="text" value="Inti" />
         <label for="middleName">Middle:</label>
@@ -31,56 +28,52 @@
         <input id="lastName" name="lastName" type="text" value="Quispe" />
         <label for="preferredName">Nickname:</label>
         <input id="preferredName" name="preferredName" type="text" value="Code-Alpaca" />
-        </div>
-
-        <!-- mascot inputs moved here so mascot sits on its own row under the Name fieldset -->
-        <div>
-          <div>
-            <div>
-              <label for="mascotDivider">Divider:</label>
-              <input id="mascotDivider" name="mascotDivider" type="text" maxlength="2" value="~" />
-            </div>
-            <div>
-              <label for="mascotDescriptor">Mascot Descriptor:</label>
-              <input id="mascotDescriptor" name="mascotDescriptor" type="text" placeholder="e.g., Peruvian Coding" value="Peruvian Coding" />
-            </div>
-            <div>
-              <label for="mascot">Mascot:</label>
-              <input id="mascot" name="mascot" type="text" placeholder="e.g., Alpaca" value="Alpaca" />
-            </div>
-          </div>
-        </div>
+      </div>
     </fieldset>
 
-    <fieldset>
+    <fieldset class="name-row">
       <legend id="formTitle">Personal information</legend>
-      <!-- mascot inputs moved to the Name fieldset to avoid wrapping the name inputs -->
-      <div>
-  <label for="displayName">Display Heading:</label>
-    <input id="displayName" name="displayName" type="text" placeholder="First M. \"Nickname\" Last" value="Inti \"Code-Alpaca\" Quispe" readonly />
-  </div>
-      <div>
+
+      <div class="two-column-short">
+        <div class="short-field">
+          <label for="mascotDescriptor">Mascot Descriptor:</label>
+          <input id="mascotDescriptor" name="mascotDescriptor" type="text" placeholder="e.g., Peruvian Coding" value="Peruvian Coding" />
+        </div>
+        <div class="short-field">
+          <label for="mascot">Mascot:</label>
+          <input id="mascot" name="mascot" type="text" placeholder="e.g., Alpaca" value="Alpaca" />
+        </div>
+        <div class="short-field short-two">
+          <label for="mascotDivider">Divider:</label>
+          <input id="mascotDivider" name="mascotDivider" type="text" maxlength="2" value="~" />
+        </div>
+      </div>
+      <div class="short-field">
+  <label for="displayName" class="author-label">Display Heading:</label>
+        <input id="displayName" name="displayName" type="text" placeholder="First M. \"Nickname\" Last" value="Inti \"Code-Alpaca\" Quispe" readonly />
+      </div>
+      <div class="short-field email-short">
   <label for="email">Email address:</label>
         <input id="email" name="email" type="email" aria-describedby="emailHelp" placeholder="name@example.edu" value="inti.quispe@codingalpaca.edu" />
         <small id="emailHelp">We will not share this address; used only for contact.</small>
       </div>
-  <div>
-  <label for="acknowledgment">Initials &amp; Date (ie JA - 09/26/2025):</label>
+  <div class="short-field ack-short">
+  <label for="acknowledgment" class="author-label">Initials &amp; Date (ie JA - 09/26/2025):</label>
     <input id="acknowledgment" name="acknowledgment" type="text" value="IQ - 09/26/2025" />
   </div>
-      <div>
+      <div class="short-field image-input-inline">
   <label for="imageUrl">Image URL:</label>
         <input id="imageUrl" name="imageUrl" type="url" placeholder="https://..." value="https://picsum.photos/300?random=1" />
-        <span>or</span>
+        <span class="or-sep">or</span>
         <input id="imageFile" name="imageFile" type="file" accept="image/*" />
-        <button type="button" id="clearImageBtn" style="display:none;">Clear Image</button>
+        <button type="button" id="clearImageBtn" class="text-link" style="display:none;">Clear Image</button>
         <input type="hidden" id="imageData" name="imageData" />
-        <img id="imagePreview" alt="Uploaded preview" style="display:none;" />
-        <div id="imageSpinner" style="display:none;" aria-hidden="true" title="Compressing image"></div>
-        <div id="imageError" aria-live="polite" style="display:none;margin-left:0.25rem;"></div>
-        <div id="imageStatus" role="status" aria-live="polite" aria-atomic="true"></div>
+        <img id="imagePreview" class="image-preview" alt="Uploaded preview" style="display:none;" />
+        <div id="imageSpinner" class="image-spinner" style="display:none;" aria-hidden="true" title="Compressing image"></div>
+        <div id="imageError" class="row-error" aria-live="polite" style="display:none;margin-left:0.25rem;"></div>
+        <div id="imageStatus" class="visually-hidden" role="status" aria-live="polite" aria-atomic="true"></div>
       </div>
-      <div>
+      <div class="short-field">
   <label for="caption">Image Caption:</label>
         <input id="caption" name="caption" type="text" value="Inti coding near the Andes" />
       </div>
@@ -88,7 +81,7 @@
 
     <fieldset>
   <legend>Personal statement</legend>
-  <label for="personalStatement">Write a few sentences about yourself:</label>
+  <label for="personalStatement" class="fieldset-label">Write a few sentences about yourself:</label>
       <div>
         <textarea id="personalStatement" name="personalStatement" rows="2">I'm a developer and educator who loves teaching people how to reason with code and algorithms. I enjoy hands-on projects, open-source collaboration, and coffee while debugging.</textarea>
       </div>
@@ -96,12 +89,12 @@
 
     <fieldset>
       <legend>Favorite Quote</legend>
-        <div>
-        <label for="quoteText">Favorite Quote:</label>
+        <div class="quote-text-col">
+        <label for="quoteText" class="fieldset-label">Favorite Quote:</label>
         <textarea id="quoteText" name="quoteText" rows="2">Simplicity is the soul of efficiency.</textarea>
       </div>
-      <div>
-        <label for="quoteAuthor">Author:</label>
+      <div class="quote-author-row">
+        <label for="quoteAuthor" class="author-label">Author:</label>
         <input id="quoteAuthor" name="quoteAuthor" type="text" value="Ada Lovelace" />
       </div>
     </fieldset>
@@ -132,19 +125,19 @@
 
     <fieldset>
       <legend>Course & additional</legend>
-      <div id="computer-platform">
+      <div class="short-field" id="computer-platform">
         <label>Platform:</label>
         <label><input type="radio" name="computerPlatform" value="Laptop" checked /> Laptop</label>
         <label><input type="radio" name="computerPlatform" value="Desktop" /> Desktop</label>
       </div>
-      <div id="computer-os">
+      <div class="short-field radio-group" id="computer-os">
         <label>Operating System:</label>
         <label><input type="radio" name="computerOS" value="Windows" /> Windows</label>
         <label><input type="radio" name="computerOS" value="Linux" /> Linux</label>
         <label><input type="radio" name="computerOS" value="macOS" checked /> macOS</label>
         <label><input type="radio" name="computerOS" value="ChromeOS" /> ChromeOS</label>
       </div>
-      <div>
+      <div class="short-field work-location">
         <label for="workLocation">Work Location:</label>
         <input id="workLocation" name="workLocation" type="text" placeholder="e.g., Home, Campus, Office" value="Home office (City)" />
       </div>
@@ -153,13 +146,12 @@
         <textarea id="backupPlan" name="backupPlan" rows="2" placeholder="e.g., borrow laptop from lab; phone hotspot + editor">Use campus lab machine; phone hotspot and basic editor; keep code in cloud repo.</textarea>
       </div>
       <div>
-  <label>Courses (<button type="button" id="addCourseBtn" class="inline-add" title="Add course" aria-label="Add course">add</button> or remove rows):
-  </label>
+  <label>Courses (add or remove rows):</label>
         <div id="coursesTable">
           <div class="courses-header">
             <div class="col-num"></div>
-            <div class="col-dept">Department</div>
-            <div class="col-number">#</div>
+              <div class="col-dept">Department</div>
+              <div class="col-number">#</div>
             <div class="col-name">Course Name</div>
             <div class="col-reason">Reason for taking</div>
             <div class="col-actions"></div>
@@ -177,15 +169,15 @@
 
     
 
-    <div>
-      <a href="#" id="submitBtn" role="button">Generate Webpage</a>
-      <a href="#" id="loadSampleBtn" role="button">Load Sample</a>
-      <a href="#" id="resetBtn" role="button">Clear</a>
+    <div class="bottom-actions">
+      <a href="#" id="submitBtn" class="text-link" role="button">Generate Webpage</a>
+      <a href="#" id="loadSampleBtn" class="text-link" role="button">Load Sample</a>
+      <a href="#" id="resetBtn" class="text-link" role="button">Clear</a>
     </div>
       </form>
     </div>
     <div class="col preview-col">
-      <h3>Preview</h3>
+      <h2>Preview</h2>
       <div id="output"></div>
     </div>
   </div>

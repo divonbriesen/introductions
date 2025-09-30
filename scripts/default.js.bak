@@ -1,32 +1,6 @@
 const form = document.getElementById("introForm");
 const output = document.getElementById("output");
 
-// Global error handlers to capture uncaught exceptions and promise rejections
-window.addEventListener('error', (e) => {
-  try {
-    console.error('Uncaught error:', e.error || e.message, e);
-    if (output) {
-      output.innerHTML = '';
-      const pre = document.createElement('pre');
-      pre.style.color = 'crimson';
-      pre.textContent = 'Uncaught error: ' + (e.message || (e.error && e.error.message) || String(e.error || e));
-      output.appendChild(pre);
-    }
-  } catch (err) {}
-});
-window.addEventListener('unhandledrejection', (ev) => {
-  try {
-    console.error('Unhandled rejection:', ev.reason);
-    if (output) {
-      output.innerHTML = '';
-      const pre = document.createElement('pre');
-      pre.style.color = 'crimson';
-      pre.textContent = 'Unhandled rejection: ' + (ev.reason && ev.reason.message ? ev.reason.message : String(ev.reason));
-      output.appendChild(pre);
-    }
-  } catch (err) {}
-});
-
 // sample courses used for initial state and reset
 const SAMPLE_COURSES = [
   { dept: 'ITIS', number: '3135', name: 'Web Application Development I', reason: "I need this to graduate." },
@@ -74,26 +48,7 @@ window.addEventListener("load", () => {
     const data = JSON.parse(savedData);
     for (const [key, value] of Object.entries(data)) {
       const field = form.elements[key];
-      if (!field) continue;
-      try {
-        // Skip trying to set file inputs programmatically (may throw/security)
-        if ((field.type || '').toLowerCase() === 'file') continue;
-        if ((field.type || '').toLowerCase() === 'checkbox') {
-          field.checked = (value === true || value === 'true' || value === 'on' || value === '1');
-          continue;
-        }
-        if ((field.type || '').toLowerCase() === 'radio') {
-          // set the matching radio button in the group
-          const radios = form.querySelectorAll(`input[name="${key}"]`);
-          radios.forEach(r => { try { r.checked = (r.value == value); } catch(e) {} });
-          continue;
-        }
-        // Fallback: try to set value; wrap in try/catch because some controls may be read-only
-        field.value = value;
-      } catch (e) {
-        // skip problematic fields (e.g., file inputs or read-only controls)
-        try { console.warn('Skipping setting field', key, e && e.message ? e.message : e); } catch (ee) {}
-      }
+      if (field) field.value = value;
     }
     // If saved data has a legacy combined `mascot` value, try to split into descriptor + mascot
     if (data.mascot && form.elements['mascotDescriptor'] && form.elements['mascot']) {
@@ -504,72 +459,14 @@ window.addEventListener("load", () => {
   }
 
   // wire top buttons to existing handlers (delegation)
-  // Robust generate handler that doesn't rely on form.requestSubmit() (safer if form APIs are unavailable)
-  function doGenerate() {
-    const f = document.getElementById('introForm');
-    if (!f) return;
-    // transient UI: show generating state on the Generate buttons
-    const genButtons = [submitTopBtn, submitBtn].filter(Boolean);
-    genButtons.forEach(b => {
-      try {
-        b.dataset._origText = b.textContent;
-        b.textContent = 'Generating…';
-        b.setAttribute('aria-busy', 'true');
-        b.setAttribute('aria-disabled', 'true');
-        b.style.pointerEvents = 'none';
-      } catch (e) {}
-    });
-
-    try {
-      if (typeof validateCourses === 'function' && !validateCourses()) return;
-      const data = Object.fromEntries(new FormData(f).entries());
-      // combine mascot fields
-      (function combineMascot(d) {
-        const desc = (f.elements['mascotDescriptor'] || {}).value || '';
-        const masc = (f.elements['mascot'] || {}).value || '';
-        if (masc.trim()) d.mascot = masc.trim();
-        if (desc.trim()) d.mascotDescriptor = desc.trim();
-      })(data);
-      // gather courses
-      const courses = [];
-      const coursesTableEl = document.getElementById('coursesTable');
-      if (coursesTableEl) {
-        const rows = coursesTableEl.querySelectorAll('.course-row');
-        rows.forEach(r => {
-          const dept = (r.querySelector('input[name="course_dept"]') || {}).value || '';
-          const number = (r.querySelector('input[name="course_number"]') || {}).value || '';
-          const name = (r.querySelector('input[name="course_name"]') || {}).value || '';
-          const reason = (r.querySelector('input[name="course_reason"]') || {}).value || '';
-          if (dept || number || name || reason) courses.push({dept, number, name, reason});
-        });
-      }
-      if (courses.length) data.courses = courses;
-      // persist
-      localStorage.setItem('introData', JSON.stringify(data));
-      try { data.displayName = computeDisplayName(new FormData(f)); } catch (e) {}
-      renderIntro(data);
-    } finally {
-      // restore generate button state
-      genButtons.forEach(b => {
-        try {
-          if (b.dataset && b.dataset._origText) b.textContent = b.dataset._origText;
-          b.removeAttribute('aria-busy');
-          b.removeAttribute('aria-disabled');
-          b.style.pointerEvents = '';
-          delete b.dataset._origText;
-        } catch (e) {}
-      });
-    }
-  }
-
-  if (submitTopBtn) submitTopBtn.addEventListener('click', (e) => { e.preventDefault(); doGenerate(); });
+  if (submitTopBtn) submitTopBtn.addEventListener('click', (e) => { e.preventDefault(); form.requestSubmit ? form.requestSubmit() : form.submit(); });
   if (loadSampleTopBtn && loadSampleBtn) loadSampleTopBtn.addEventListener('click', (e) => { e.preventDefault(); loadSampleBtn.click(); });
   if (resetTopBtn && resetBtn) resetTopBtn.addEventListener('click', (e) => { e.preventDefault(); resetBtn.click(); });
   // bottom text links: prevent default and call handlers
   const submitBtn = document.getElementById('submitBtn');
   const loadSampleBtnLink = document.getElementById('loadSampleBtn');
   const resetBtnLink = document.getElementById('resetBtn');
-  if (submitBtn) submitBtn.addEventListener('click', (e) => { e.preventDefault(); doGenerate(); });
+  if (submitBtn) submitBtn.addEventListener('click', (e) => { e.preventDefault(); form.requestSubmit ? form.requestSubmit() : form.submit(); });
   if (loadSampleBtnLink && loadSampleBtn) loadSampleBtnLink.addEventListener('click', (e) => { e.preventDefault(); loadSampleBtn.click(); });
   if (resetBtnLink && resetBtn) resetBtnLink.addEventListener('click', (e) => { e.preventDefault(); resetBtn.click(); });
 
@@ -820,7 +717,6 @@ window.addEventListener("load", () => {
     const nicknamePart = preferred ? `"${preferred}"` : '';
     const parts = [first, middleInitial, nicknamePart, last].filter(Boolean);
     const namePart = parts.join(' ');
-    // Combine descriptor + mascot (if present)
     const combinedMascot = mascotDesc && mascot ? `${mascotDesc} ${mascot}` : (mascotDesc || mascot);
     const dividerRaw = (formData.get('mascotDivider') || '').toString();
     const divider = dividerRaw.trim();
@@ -877,23 +773,54 @@ window.addEventListener("load", () => {
 
 form.addEventListener("submit", function(e) {
   e.preventDefault();
-  // Delegate to centralized generator
-  try { doGenerate(); } catch (err) { console.error('Generation failed', err); }
+  if (typeof validateCourses === 'function' && !validateCourses()) return;
+  const data = Object.fromEntries(new FormData(form).entries());
+  // combine mascotDescriptor + mascot into `mascot` for saved data
+  (function combineMascot(d) {
+    const desc = (form.elements['mascotDescriptor'] || {}).value || '';
+    const masc = (form.elements['mascot'] || {}).value || '';
+    if (masc.trim()) d.mascot = masc.trim();
+    if (desc.trim()) d.mascotDescriptor = desc.trim();
+  })(data);
+  // gather courses similarly for submit
+  const courses = [];
+  const coursesTableEl = document.getElementById('coursesTable');
+  if (coursesTableEl) {
+    const rows = coursesTableEl.querySelectorAll('.course-row');
+    rows.forEach(r => {
+      const dept = (r.querySelector('input[name="course_dept"]') || {}).value || '';
+      const number = (r.querySelector('input[name="course_number"]') || {}).value || '';
+      const name = (r.querySelector('input[name="course_name"]') || {}).value || '';
+      const reason = (r.querySelector('input[name="course_reason"]') || {}).value || '';
+      if (dept || number || name || reason) courses.push({dept, number, name, reason});
+    });
+  }
+  if (courses.length) data.courses = courses;
+
+  // Save to localStorage
+  localStorage.setItem("introData", JSON.stringify(data));
+
+  // Render the intro page
+  try {
+    // ensure displayName is present in the saved data
+    const fd2 = new FormData(form);
+    data.displayName = computeDisplayName(fd2);
+  } catch (e) {}
+  renderIntro(data);
 });
 
 function renderIntro(data) {
-  try {
-    data = data || {};
-    // helper to create an element with optional class and text
-    function el(tag, className, text) {
-      const e = document.createElement(tag);
-      if (className) e.className = className;
-      if (text !== undefined) e.textContent = text;
-      return e;
-    }
+  data = data || {};
+  // helper to create an element with optional class and text
+  function el(tag, className, text) {
+    const e = document.createElement(tag);
+    if (className) e.className = className;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
 
-    // build the preview into a document fragment first
-    const frag = document.createDocumentFragment();
+  // build the preview into a document fragment first
+  const frag = document.createDocumentFragment();
 
   // Header and acknowledgment
   // First line: Last, First M.
@@ -911,24 +838,30 @@ function renderIntro(data) {
   frag.appendChild(el('p', 'italic', data.acknowledgment || ''));
 
   // display name as a prominent H3
-  // If the form has an explicit displayName, use it verbatim in the preview.
-  // Otherwise, compute the display name from parts and append mascot when present.
-  let finalDisplay = '';
-  if (data.displayName && data.displayName.trim()) {
-    finalDisplay = data.displayName.trim();
-  } else {
+  const displayLine = (function() {
+    if (data.displayName && data.displayName.trim()) return data.displayName.trim();
     const parts = [];
     if (data.firstName) parts.push(data.firstName);
     if (data.middleName) parts.push((data.middleName.trim()[0] || '') + '.');
     if (data.preferredName) parts.push('"' + data.preferredName + '"');
     if (data.lastName) parts.push(data.lastName);
-    const namePart = parts.filter(Boolean).join(' ').trim();
-    if (namePart) {
-      finalDisplay = namePart + (data.mascot ? ' ~ ' + data.mascot : '');
+    return parts.filter(Boolean).join(' ');
+  })();
+  // If the computed displayLine already contains the mascot, replace that first occurrence
+  // with the mascotDescriptor (if provided) so the mascot only appears once and the
+  // descriptor is shown in the first position.
+  let displayBase = displayLine || '';
+  if (data.mascot && displayBase && displayBase.indexOf(data.mascot) !== -1) {
+    const desc = (data.mascotDescriptor || '').toString().trim();
+    if (desc) {
+      // replace only the first occurrence
+      displayBase = displayBase.replace(data.mascot, desc);
     } else {
-      finalDisplay = data.mascot ? data.mascot : '';
+      // remove the duplicated mascot occurrence to avoid repetition
+      displayBase = displayBase.replace(data.mascot, '').replace(/\s*~\s*$/, '').trim();
     }
   }
+  const finalDisplay = `${displayBase} ${data.mascot ? ' ~ ' + data.mascot : ''}`.trim();
   frag.appendChild(el('h3', 'display-name', finalDisplay));
 
   // image and caption in a centered figure
@@ -1054,28 +987,9 @@ function renderIntro(data) {
   }
   // backup is included above as a separate list item when present
 
-  // render to output container inside a styled card (matches form fieldset look)
+  // render to output container
   output.innerHTML = '';
-  // ensure preview area has a minimum height so content isn't collapsed
-  try { output.style.minHeight = output.style.minHeight || '120px'; } catch (e) {}
-  const container = document.querySelector('.preview-col') || output;
-  // remove any previous preview-inner to avoid duplicates / ordering issues
-  try { Array.from(container.querySelectorAll('.preview-inner')).forEach(n => n.remove()); } catch (e) {}
-  const inner = document.createElement('div'); inner.className = 'preview-inner';
-  inner.appendChild(frag);
-  container.appendChild(inner);
-  try { console.log('renderIntro: appended preview children=', output.childNodes.length); } catch (e) {}
-  } catch (err) {
-    // Log and show a visible error so the user can see why rendering failed
-    try { console.error('renderIntro failed', err); } catch (e) {}
-    if (output) {
-      output.innerHTML = '';
-      const pre = document.createElement('pre');
-      pre.style.color = 'crimson';
-      pre.textContent = 'Rendering error: ' + (err && err.message ? err.message : String(err));
-      output.appendChild(pre);
-    }
-  }
+  output.appendChild(frag);
 
   // populate JSON and HTML code areas if present
   const jsonArea = document.getElementById('jsonOutput');
@@ -1149,6 +1063,5 @@ function renderIntro(data) {
       // Fallback to raw innerHTML if anything goes wrong
       htmlArea.value = output.innerHTML;
     }
-    // (iframe preview intentionally removed)
   }
 }

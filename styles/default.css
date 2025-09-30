@@ -1,482 +1,118 @@
-/* --- NEW STYLES for "Live Edit" feel --- */
+/* Tidied stylesheet - deduplicated and tightened.
+   Preserves layout and styles required by HTML and scripts.
+*/
 
-/* Use the nicer system UI sans-serif stack globally (index.html loads this file) */
-body {
-    font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-}
-
-/* Warm page background and card styling */
 html, body { height: 100%; }
 body {
-    background: linear-gradient(180deg, #fff7f1 0%, #fff2e6 45%, #fff7ef 100%); /* warm creams */
-    color: #2b2b2b;
+  font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: linear-gradient(180deg, #fff7f1 0%, #fff2e6 45%, #fff7ef 100%);
+  color: #2b2b2b;
+  margin: 0;
+  padding: 1rem;
 }
-/* utility: visually hidden but accessible */
+
+/* Design tokens for card-like surfaces */
+:root {
+  --card-bg: #fffdfa;
+  --card-radius: 10px;
+  --card-border: 1px solid rgba(200,150,110,0.12);
+  --card-shadow: 0 8px 24px rgba(50,30,10,0.08);
+  --card-shadow-soft: 0 6px 18px rgba(50,30,10,0.03);
+  --inner-bg-gradient: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(255,250,245,0.95));
+}
+
+/* Utilities and minimal helpers */
 .visually-hidden { position: absolute !important; height: 1px; width: 1px; overflow: hidden; clip: rect(1px,1px,1px,1px); white-space: nowrap; }
-.form-col {
-    background: #fffdfa; /* soft off-white */
-    border-radius: 10px;
-    padding: 1.25rem;
-    box-shadow: 0 8px 24px rgba(50,30,10,0.08);
-    border: 1px solid rgba(200,150,110,0.12);
-}
-.page-subtitle { text-align: center; color: #8b3e18; margin-top: 0.25rem; margin-bottom: 1rem; font-weight: 600; }
-.section-head { margin: 1rem 0 0.25rem 0; font-size: 1.05rem; color: #8b3e18; }
-
-/* Make fieldsets look like warm, rounded cards with a subtle border */
-fieldset {
-    border: 1px solid rgba(160,120,90,0.12);
-    background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,250,245,0.9));
-    margin: 0 0 1rem 0;
-    padding: 0.9rem 0.95rem;
-    border-radius: 10px;
-    box-shadow: 0 6px 18px rgba(50,30,10,0.03);
-}
-/* Legend styled as a small badge that sits over the fieldset border */
-legend {
-    font-weight: 700;
-    color: #5a3220;
-    padding: 0.15rem 0.55rem;
-    margin-bottom: 0.5rem;
-    margin-left: -0.35rem; /* pull slightly left so it overlaps */
-    background: linear-gradient(180deg,#fffefc,#fff6ee);
-    border-radius: 6px;
-    display: inline-block;
-    box-shadow: 0 2px 6px rgba(50,30,10,0.04);
-}
-
-/* Inputs and textareas: warm, subtle borders and consistent padding */
-input[type="text"],
-textarea,
-input[type="email"],
-input[type="url"] {
-        border: 1px solid rgba(160,120,90,0.22);
-        background-color: #fffefc;
-        padding: 0.45rem 0.5rem;
-        border-radius: 6px;
-        outline: none;
-        box-shadow: none;
-        transition: border-color 160ms ease, box-shadow 160ms ease, background-color 120ms;
-        font-family: inherit;
-}
-
-input[type="text"]::placeholder,
-textarea::placeholder {
-        color: #b99c86;
-}
-
-input[type="text"]:focus,
-textarea:focus,
-input[type="email"]:focus,
-input[type="url"]:focus {
-        border-color: #d77a3a;
-        box-shadow: 0 2px 8px rgba(215,122,58,0.12);
-        background-color: #fffdf9;
-}
-
-/* Buttons: warm primary and subtle secondary */
-.texty-btn,
-button[type="submit"] {
-    background: linear-gradient(180deg,#d77a3a,#c05f27);
-    color: #fff;
-    border: none;
-    padding: 0.5rem 0.9rem;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
-}
-.texty-btn:hover, button[type="submit"]:hover {
-    filter: brightness(0.98);
-}
-.texty-btn:active, button[type="submit"]:active { transform: translateY(1px); }
-
-.copy-btn {
-    background: transparent; border: 1px solid rgba(194,120,70,0.22); padding: 0.25rem 0.5rem; border-radius:6px; color:#a0421a;
-    font-size: 1.05rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* Text-style action links used for top and bottom form controls */
-.text-link {
-    color: #c2551a; /* brighter orange-brown for higher contrast */
-    text-decoration: none;
-    margin-right: 0.8rem;
-    font-weight: 700;
-    font-size: 1rem;
-}
-.text-link:hover { text-decoration: underline; }
-.text-link:focus { outline: 2px solid rgba(215,122,58,0.16); border-radius: 4px; padding: 0.08rem 0.18rem; }
-.copy-btn svg { display: block; width: 18px; height: 18px; color: #6b3f2a; }
-.icon-check { color: #2b7a3e; }
-
-/* copied state: scale & fade animation and color change */
-.copy-btn { transition: transform 140ms ease; }
-.copy-btn.copied { transform: scale(1.02); }
-.copy-btn.copied svg { transform-origin: center; transform: scale(1.12); opacity: 0.95; color: #2b7a3e; transition: transform 160ms ease, opacity 160ms ease, color 160ms; }
-
-/* small utility tweaks for consistent form spacing */
-label { color: #4b3326; }
-
-/* General Styling for all inputs and textareas */
-input[type="text"],
-textarea {
-    /* 1. Reset Appearance */
-    border: none;
-    background-color: transparent;
-    outline: none;
-    padding: 0;
-    margin: 0;
-    resize: none;
-
-    /* 2. Match Surrounding Text */
-    font-family: inherit;
-    font-size: inherit;
-    font-weight: inherit;
-    color: inherit;
-    line-height: inherit;
-
-    /* 3. "Fill in the Blank" Underline */
-    border-bottom: 2px dashed #ccc;
-    border-radius: 0;
-    width: auto;
-
-    /* FIX: Align the input fields with the text baseline */
-    vertical-align: baseline;
-}
-
-/* Style the placeholder text to be subtle */
-input[type="text"]::placeholder,
-textarea::placeholder {
-    color: #aaa;
-    opacity: 1;
-}
-
-/* Add a subtle effect when a field is being edited */
-input[type="text"]:focus,
-textarea:focus {
-    border-bottom: 2px solid #007bff;
-    background-color: rgba(0, 123, 255, 0.05);
-}
-
-/* --- Specific Sizing & Alignment --- */
-
-/* Ensure inputs inside the h1 match its weight */
-h1 input[type="text"] {
-    font-weight: inherit;
-}
-
-/* Give inputs a minimum width so they don't collapse */
-#name { min-width: 15rem; }
-#role { min-width: 12rem; }
-#work { min-width: 12rem; }   /* Reduced width to prevent wrapping */
-#social { min-width: 10rem; } /* Reduced width to prevent wrapping */
-
-/* FIX: Special handling for the textarea */
-#passions {
-    display: inline-block; /* Change from 'block' to flow with the sentence */
-    width: 95%;           /* Allow it to take up space and wrap its own text */
-    overflow: hidden;
-    min-height: 1.8rem;
-    border-bottom-width: 1px;
-    vertical-align: bottom; /* Align with the bottom of the text line */
-}
-
-/* Make Background-area textareas a fixed 450px width on desktop for consistent sizing */
-#personalBackground,
-#professionalBackground,
-#academicBackground,
-#funnyRemember,
-#otherNotes {
-    width: 450px;
-    box-sizing: border-box; /* keep padding inside the width */
-    max-width: none;
-}
-
-@media (max-width: 980px) {
-    /* On smaller screens revert backgrounds to normal flow */
-    #personalBackground,
-    #professionalBackground,
-    #academicBackground,
-    #funnyRemember,
-    #otherNotes { width: 100%; }
-}
+.col { box-sizing: border-box; }
+.centered { text-align: center; }
+.italic { font-style: italic; }
 
 /* Layout: form left (~800px) and preview (HTML rendering) on the right */
-.workspace {
-    display: flex;
-    gap: 1.5rem;
-    align-items: flex-start;
-    justify-content: space-between;
-    max-width: 1400px;
-    margin: 0 auto;
+.workspace { display: flex; gap: 1.5rem; align-items: flex-start; justify-content: space-between; max-width: 1400px; margin: 0 auto; }
+.form-col { flex: 0 0 800px; max-width: 800px; min-width: 0; box-sizing: border-box; padding: 1.25rem; }
+.preview-col { flex: 1 1 0%; min-width: 280px; border-left: 1px solid #e6e6e6; padding-left: 1rem; }
+
+/* Ensure the form itself doesn't add unexpected margins/padding inside the card */
+.form-col > form { margin: 0; background: transparent; }
+
+/* Shared card-like surface used by form, preview and fieldsets */
+.form-col, .preview-col, fieldset {
+  background: var(--card-bg);
+  border-radius: var(--card-radius);
+  box-shadow: var(--card-shadow);
+  border: var(--card-border);
+  box-sizing: border-box;
 }
 
-/* Center the action links in top and bottom positions */
-.top-actions,
-.bottom-actions {
-    display: flex;
-    justify-content: center;
-    gap: 0.8rem;
-    margin: 0.6rem 0 1rem 0;
+/* Preview card and its inner surface */
+.preview-col { padding: 1.25rem; }
+.preview-inner { background: var(--inner-bg-gradient); border-radius: calc(var(--card-radius) - 2px); padding: 0.9rem; box-sizing: border-box; }
+
+.page-subtitle { text-align: center; color: #8b3e18; margin-top: 0.25rem; margin-bottom: 1rem; font-weight: 600; }
+
+/* Small, consistent column headings for form and preview */
+.form-col h3, .preview-col h3 {
+  margin: 0 0 0.6rem 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #5a3220;
 }
 
-.col {
-    box-sizing: border-box;
-}
+/* Inline 'add' button used inside the Courses label */
+.inline-add { background: transparent; border: none; color: #b55d2a; font-weight: inherit; font-size: inherit; line-height: inherit; padding: 0 0.06rem; cursor: pointer; vertical-align: baseline; }
+.inline-add:hover { text-decoration: underline; }
+.inline-add:focus { outline: 2px dashed rgba(181,93,42,0.25); outline-offset: 3px; }
 
-.form-col {
-    /* fixed-ish width for the form */
-    flex: 0 0 800px;
-    max-width: 800px;
+/* Fieldset cards */
+fieldset { /* keep a slightly softer shadow and inner gradient for fieldsets */
+  background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,250,245,0.9));
+  margin: 0 0 1rem 0;
+  padding: 0.9rem 0.95rem;
+  box-shadow: var(--card-shadow-soft);
+  width: 100%;
 }
+legend { font-weight: 700; color: #5a3220; padding: 0.15rem 0.55rem; margin-bottom: 0.5rem; background: linear-gradient(180deg,#fffefc,#fff6ee); border-radius: 6px; display: inline-block; }
 
-.preview-col {
-    /* preview fills the remaining space on the right */
-    flex: 1 1 0%;
-    min-width: 280px;
-    border-left: 1px solid #e6e6e6;
-    padding-left: 1rem;
-}
+/* Inputs */
+input[type="text"], textarea, input[type="email"], input[type="url"] { border: 1px solid rgba(160,120,90,0.22); background-color: #fffefc; padding: 0.45rem 0.5rem; border-radius: 6px; outline: none; box-shadow: none; transition: border-color 160ms ease, box-shadow 160ms ease, background-color 120ms; font-family: inherit; box-sizing: border-box; width: 100%; }
+input::placeholder, textarea::placeholder { color: #b99c86; }
+input:focus, textarea:focus { border-color: #d77a3a; box-shadow: 0 2px 8px rgba(215,122,58,0.12); background-color: #fffdf9; }
 
-/* make code panes in the lower area share space */
-.code-row {
-    display: flex;
-    gap: 1rem;
-    margin-top: 1rem;
-}
-.code-col {
-    flex: 1 1 0%;
-}
+/* Code panes */
+.code-row { display: flex; gap: 1rem; margin-top: 1rem; }
+.code-col { flex: 1 1 0%; }
+#htmlOutput, #jsonOutput { min-height: 200px; width: 100%; box-sizing: border-box; background-color: #fffaf5; border: 1px solid rgba(160,120,90,0.12); padding: 0.6rem; border-radius: 6px; color: #2b2b2b; font-family: "Courier New", Courier, monospace; font-size: 0.95rem; line-height: 1.45; white-space: pre-wrap; }
+.copy-btn { transition: transform 140ms ease; background: transparent; border: none; padding: 0.1rem 0.3rem; cursor: pointer; }
+.copy-btn.copied { transform: scale(1.02); }
+.copy-status { margin-left: 0.5rem; font-size: 0.95rem; color: #5a3220; }
 
-#htmlOutput, #jsonOutput {
-    min-height: 200px;
-    width: 100%;
-    box-sizing: border-box;
-    /* lighter warm background and readable monospace */
-    background-color: #fffaf5;
-    border: 1px solid rgba(160,120,90,0.12);
-    padding: 0.6rem;
-    border-radius: 6px;
-    color: #2b2b2b;
-    font-family: "Courier New", Courier, monospace;
-    font-size: 0.95rem;
-    line-height: 1.45;
-    white-space: pre-wrap;
-}
-
-/* Name row: compact inputs for first/middle/last and slightly wider nickname */
-.name-row {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-    flex-wrap: wrap;
-}
-.name-row label { margin: 0; flex: 0 0 auto; margin-right: 0.4rem; }
-.name-row input { box-sizing: border-box; flex: 0 0 auto; }
-.name-row input#firstName,
-.name-row input#middleName,
-.name-row input#lastName { width: calc(6.5rem * 0.9); }
-.name-row input#preferredName { width: calc(9rem * 0.9); }
-@media (max-width: 700px) {
-    .name-row { flex-direction: column; align-items: stretch; }
-    .name-row input { width: 100%; }
-}
-
-/* Inline image URL + upload row */
-.image-input-inline {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    flex-wrap: wrap;
-}
-.image-input-inline label { margin: 0; white-space: nowrap; }
-.image-input-inline input[type="url"] { flex: 0 0 30%; width: 30%; min-width: 120px; }
-.image-input-inline input[type="file"] { flex: 0 0 auto; }
-.image-input-inline .or-sep { color: #8b3e18; font-weight: 700; margin: 0 0.25rem; }
-
-/* Short single-line / two-column field layout: label left, input grows to fill the rest of the fieldset */
-.short-field {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    flex-wrap: wrap;
-}
-.short-field label {
-    margin-top: 0;
-    flex: 0 0 auto; /* size to content so input sits immediately to the right */
-    max-width: none;
-    white-space: nowrap;
-    margin-right: 0.5rem;
-}
-.short-field input[type="text"],
-.short-field input[type="email"],
-.short-field input[type="url"],
-.short-field input[type="number"],
-.short-field textarea {
-    /* shrink text-like inputs to ~30% of available width while keeping a
-       sensible minimum so they remain usable; exclude radios/checkboxes */
-    flex: 0 0 30%;
-    width: 30%;
-    max-width: none;
-    min-width: 4.5rem; /* usable on small screens */
-    box-sizing: border-box;
-}
-.short-field small {
-    display: block;
-    flex-basis: 100%;
-    margin-top: 0.3rem;
-    color: #666;
-    font-size: 0.9rem;
-}
-
-@media (max-width: 600px) {
-    .short-field {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    .short-field label {
-        flex-basis: auto;
-        max-width: none;
-    }
-    .short-field input,
-    .short-field textarea {
-        max-width: none;
-        width: 100%;
-    }
-}
-
-/* Two-column short-field grouping (e.g., Mascot Descriptor + Mascot) */
-.two-column-short {
-    display: flex;
-    gap: 0.6rem;
-    align-items: flex-start;
-}
-.two-column-short .short-field {
-    flex: 1 1 48%;
-}
-@media (max-width: 720px) {
-    .two-column-short { flex-direction: column; }
-    .two-column-short .short-field { width: 100%; }
-}
-
-/* Uploaded image preview and clear control */
-.image-preview { max-width: 72px; max-height: 72px; border-radius: 6px; margin-left: 0.5rem; border: 1px solid rgba(160,120,90,0.12); }
-.image-input-inline #clearImageBtn { margin-left: 0.4rem; padding: 0.18rem 0.4rem; }
-.image-input-inline #imageError { color: #b02a2a; font-size: 0.9rem; margin-left: 0.5rem; }
-
-/* inline spinner for image compression */
-.image-spinner {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    border: 3px solid rgba(160,120,90,0.18);
-    border-top-color: #c2551a;
-    animation: spin 900ms linear infinite;
-    margin-left: 0.5rem;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* Preview-specific styles */
-.display-name { font-size: 1.45rem; text-align: center; margin: 0.35rem 0; color: #6b3f2a; }
+/* Profile and image */
 .profile-figure { display: flex; flex-direction: column; align-items: center; margin: 0.6rem 0; }
-.profile-figure img.profile-image { max-width: 100%; height: auto; border-radius: 6px; }
+.profile-image, .profile-figure img { max-width: 100%; height: auto; border-radius: 6px; }
 .profile-figure figcaption { font-style: italic; color: #5a4a3d; margin-top: 0.35rem; }
+.image-preview { max-width: 72px; max-height: 72px; border-radius: 6px; margin-left: 0.5rem; border: 1px solid rgba(160,120,90,0.12); }
 
-/* Reduce indent for lists in preview area */
-.preview-col ul, .preview-col ol { margin-left: 0.6rem; padding-left: 1rem; }
-.preview-col li { margin-bottom: 0.35rem; }
+/* Display name */
+.display-name { font-size: 1.45rem; text-align: center; margin: 0.35rem 0; color: #6b3f2a; }
 
-/* Quote styling */
-.quote { font-style: normal; font-size: 1.05rem; text-align: center; margin: 0.6rem 0; }
-.quote-author { margin-top: 0.25rem; font-style: italic; text-align: center; color: #4b3326; }
+/* Quote (rendered by script) */
+.quote { font-style: normal; font-size: 1.05rem; margin: 0.6rem 0; }
+.quote.centered { text-align: center; }
+.quote-author { margin-top: 0.25rem; font-style: italic; color: #4b3326; }
 
-/* Layout for Favorite Quote: author on left, text on right */
-.quote-row {
-    display: flex;
-    gap: 0.8rem;
-    align-items: flex-start;
-}
+/* Quote layout: inputs in the form (fieldset) */
+.quote-row { display: flex; gap: 0.8rem; align-items: flex-start; }
 .quote-author-col { flex: 0 0 180px; }
 .quote-author-col input { width: 100%; box-sizing: border-box; }
-.quote-text-col {
-    display: flex;
-    gap: 0.6rem;
-    align-items: flex-start;
-    flex: 1 1 0%;
-    flex-wrap: wrap;
-}
-.quote-text-col .fieldset-label {
-    margin: 0;
-    flex: 0 0 auto;
-    white-space: nowrap;
-    margin-right: 0.5rem;
-}
-.quote-text-col textarea {
-    /* Desktop: fixed target width to align to the right of the label */
-    flex: 0 0 500px;
-    width: 500px;
-    min-width: 14rem;
-    max-width: 100%; /* allow shrink on narrow containers when constrained */
-    box-sizing: border-box;
-}
-
-@media (max-width: 600px) {
-    .quote-text-col {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    .quote-text-col .fieldset-label {
-        white-space: normal;
-        margin-bottom: 0.25rem;
-    }
-    .quote-text-col textarea { width: 100%; }
-}
-.quote-text-col textarea { width: 100%; box-sizing: border-box; min-height: 3.2rem; }
-
-/* Quote layout: quote textarea on top, author label+input on one line below */
-.quote-author-row {
-    display: flex;
-    gap: 0.6rem;
-    align-items: center;
-}
+.quote-text-col { display: flex; gap: 0.6rem; align-items: flex-start; flex: 1 1 0%; flex-wrap: wrap; }
+.quote-text-col .fieldset-label { margin: 0; flex: 0 0 auto; white-space: nowrap; margin-right: 0.5rem; }
+.quote-text-col textarea { flex: 1 1 100%; width: 100%; max-width: 500px; min-width: 14rem; box-sizing: border-box; }
+.quote-author-row { display: flex; gap: 0.6rem; align-items: center; }
 .quote-author-row .author-label { flex: 0 0 auto; margin: 0; }
 .quote-author-row input { flex: 1 1 auto; width: auto; box-sizing: border-box; }
 
-@media (max-width: 720px) {
-    .quote-row { flex-direction: column; }
-    .quote-author-row { flex-direction: column; align-items: stretch; }
-    .quote-author-row input { width: 100%; }
-}
-
-/* Responsive: stack columns on small screens */
-@media (max-width: 980px) {
-    .workspace,
-    .code-row {
-        flex-direction: column;
-    }
-    .form-col {
-        flex: none;
-        width: 100%;
-        max-width: 100%;
-    }
-    .preview-col {
-        padding-left: 0;
-        border-left: none;
-    }
-}
-
-/* Courses layout: show header and render rows inline */
-.courses-header {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-    padding: 0.4rem 0.6rem;
-    font-weight: 600;
-    color: #333;
-    border-bottom: 1px solid #e6e6e6;
-}
+/* Courses (used by scripts) */
+.courses-header { display: flex; gap: 0.5rem; align-items: center; padding: 0.4rem 0.6rem; font-weight: 600; color: #333; border-bottom: 1px solid #e6e6e6; }
 .courses-header .col-num { flex: 0 0 2.2rem; }
 .courses-header .col-dept { flex: 0 0 4rem; }
 .courses-header .col-number { flex: 0 0 3rem; }
@@ -484,104 +120,37 @@ h1 input[type="text"] {
 .courses-header .col-reason { flex: 0 1 300px; min-width: 10rem; }
 .courses-header .col-actions { flex: 0 0 auto; min-width: 4.5rem; display:flex; justify-content:flex-end; align-items:center; }
 
-.course-row {
-    display: flex;
-    flex-direction: row;
-    gap: 0.5rem;
-    border: 1px solid #eee;
-    padding: 0.5rem;
-    margin-top: 0.5rem;
-    background: #fff;
-    align-items: center;
-}
+.course-row { display: flex; gap: 0.5rem; border: 1px solid #eee; padding: 0.5rem; margin-top: 0.5rem; background: #fff; align-items: center; box-sizing: border-box; }
 .course-row .col-num { flex: 0 0 2.2rem; font-weight: 600; text-align: center; }
 .course-row .col-dept { flex: 0 0 4rem; }
 .course-row .col-number { flex: 0 0 3rem; }
-.course-row { box-sizing: border-box; }
 .course-row .col-name { flex: 1 1 28%; min-width: 8rem; }
 .course-row .col-reason { flex: 0 1 300px; min-width: 10rem; }
 .course-row .col-actions { flex: 0 0 auto; min-width: 4.5rem; display: flex; gap: 0.35rem; justify-content: flex-end; align-items: center; }
 .course-row .col-dept input,
 .course-row .col-number input,
 .course-row .col-name input,
-.course-row .col-reason input {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 0.35rem 0.45rem;
-}
+.course-row .col-reason input { width: 100%; box-sizing: border-box; padding: 0.35rem 0.45rem; }
 
-/* ensure small screens still wrap sensibly */
-@media (max-width: 720px) {
-    .courses-header, .course-row { flex-direction: column; align-items: stretch; }
-    .courses-header .col-actions, .course-row .col-actions { justify-content: flex-start; }
-}
-
-/* Red X remove button */
-/* Action buttons styled as text commands */
-.col-actions button {
-    background: transparent;
-    border: none;
-    padding: 0.2rem;
-    margin: 0;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 34px;
-    height: 34px;
-    box-sizing: border-box;
-    border-radius: 6px;
-    color: #6b3f2a; /* default warm text color */
-}
+.col-actions button { background: transparent; border: none; padding: 0.2rem; margin: 0; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; box-sizing: border-box; border-radius: 6px; color: #6b3f2a; }
 .col-actions button:hover { background: rgba(200,160,120,0.06); }
 .col-actions button:focus { outline: 2px solid rgba(215,122,58,0.16); }
 .col-actions .icon-action { width: 20px; height: 20px; display: block; color: inherit; }
-.col-actions .icon-action path,
-.col-actions .icon-action line,
-.col-actions .icon-action rect {
-    stroke-width: 2.6; /* slightly heavier strokes for bolder icons */
-}
+.col-actions .icon-action path, .col-actions .icon-action line, .col-actions .icon-action rect { stroke-width: 2.6; }
 .remove-btn { color: #b02a2a; }
 .add-below-btn { color: #1a7a2a; }
 .move-up { color: #5a3a20; }
 
-/* Add-below green plus button */
-.add-below-btn {
-    background: transparent;
-    border: none;
-    color: #080;
-    font-size: 1.18rem;
-    font-weight: 700;
-    line-height: 1;
-    padding: 0.08rem 0.35rem;
-    cursor: pointer;
-}
+.add-below-btn { background: transparent; border: none; color: #080; font-size: 1.18rem; font-weight: 700; line-height: 1; padding: 0.08rem 0.35rem; cursor: pointer; }
 .add-below-btn:hover { background: rgba(0,128,0,0.06); }
 .add-below-btn:focus { outline: 2px solid rgba(0,128,0,0.2); }
 
-/* Fieldset label above controls (full-width) */
-.fieldset-label {
-    display: block;
-    font-weight: 600;
-    margin-bottom: 0.35rem;
-    color: #5a3220;
-}
+.fieldset-label { display: block; font-weight: 600; margin-bottom: 0.35rem; color: #5a3220; }
 
-/* Make the personal statement and quote textareas span the fieldset width on desktop */
-#personalStatement,
-#quoteText {
-    width: 100%;
-    box-sizing: border-box;
-    min-height: 3.2rem;
-}
+/* Textarea sizing for larger fields */
+#personalStatement, #quoteText { width: 100%; box-sizing: border-box; min-height: 3.2rem; }
+#quoteAuthor { display: block; width: 100%; box-sizing: border-box; margin-top: 0.2rem; }
 
-#quoteAuthor {
-    display: block;
-    width: 100%;
-    box-sizing: border-box;
-    margin-top: 0.2rem;
-}
-
-@media (max-width: 700px) {
-    #personalStatement, #quoteText { width: 100%; }
-}
+/* Responsive rules */
+@media (max-width: 980px) { .workspace, .code-row { flex-direction: column; } .form-col { flex: none; width: 100%; max-width: 100%; } .preview-col { padding-left: 0; border-left: none; } }
+@media (max-width: 720px) { .courses-header, .course-row { flex-direction: column; align-items: stretch; } .courses-header .col-actions, .course-row .col-actions { justify-content: flex-start; } .quote-row { flex-direction: column; } .quote-author-row { flex-direction: column; align-items: stretch; } .quote-author-row input { width: 100%; } }
