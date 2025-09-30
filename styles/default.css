@@ -277,8 +277,8 @@ h1 input[type="text"] {
 .name-row input { box-sizing: border-box; flex: 0 0 auto; }
 .name-row input#firstName,
 .name-row input#middleName,
-.name-row input#lastName { width: calc(6.5rem * 0.3); }
-.name-row input#preferredName { width: calc(9rem * 0.3); }
+.name-row input#lastName { width: calc(6.5rem * 0.9); }
+.name-row input#preferredName { width: calc(9rem * 0.9); }
 @media (max-width: 700px) {
     .name-row { flex-direction: column; align-items: stretch; }
     .name-row input { width: 100%; }

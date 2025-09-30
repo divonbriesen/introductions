@@ -193,6 +193,8 @@ window.addEventListener("load", () => {
     });
   }
 
+  // (Label colons are now included in the static HTML; runtime helper removed.)
+
   // handle image file uploads: read as DataURL and store in hidden imageData field
   if (imageFileInput) {
     const imagePreview = document.getElementById('imagePreview');
@@ -989,5 +991,69 @@ function renderIntro(data) {
   } catch (err) {
     if (jsonArea) jsonArea.value = String(data);
   }
-  if (htmlArea) htmlArea.value = output.innerHTML;
+  if (htmlArea) {
+    // Pretty-print the DOM inside `output` into a readable HTML string.
+    const voidElements = new Set(['area','base','br','col','embed','hr','img','input','link','meta','param','source','track','wbr']);
+
+    function escapeAttr(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+    function escapeText(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function serialize(node, indent) {
+      indent = indent || '';
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const tag = node.tagName.toLowerCase();
+        const attrs = Array.from(node.attributes || []).map(a => `${a.name}="${escapeAttr(a.value)}"`).join(' ');
+        const open = attrs ? `<${tag} ${attrs}>` : `<${tag}>`;
+        const children = Array.from(node.childNodes || []).filter(n => !(n.nodeType === Node.TEXT_NODE && String(n.nodeValue).trim() === ''));
+
+        // Void element (self-closing)
+        if (voidElements.has(tag) && children.length === 0) return indent + open.replace(/>$/, ' />');
+
+        // If single text child, render on one line
+        if (children.length === 1 && children[0].nodeType === Node.TEXT_NODE) {
+          const text = String(children[0].nodeValue || '');
+          return indent + open + escapeText(text.trim()) + `</${tag}>`;
+        }
+
+        // Multi-line element
+        const lines = [indent + open];
+        for (const child of children) {
+          if (child.nodeType === Node.TEXT_NODE) {
+            const txt = String(child.nodeValue || '').trim();
+            if (txt) lines.push(indent + '  ' + escapeText(txt));
+          } else {
+            lines.push(serialize(child, indent + '  '));
+          }
+        }
+        lines.push(indent + `</${tag}>`);
+        return lines.join('\n');
+      } else if (node.nodeType === Node.TEXT_NODE) {
+        const t = String(node.nodeValue || '').trim();
+        return t ? indent + escapeText(t) : '';
+      } else if (node.nodeType === Node.COMMENT_NODE) {
+        return indent + `<!-- ${String(node.nodeValue || '').trim()} -->`;
+      }
+      return '';
+    }
+
+    function formatContainer(container) {
+      const parts = [];
+      for (const child of Array.from(container.childNodes)) {
+        const s = serialize(child, '');
+        if (s) parts.push(s);
+      }
+      return parts.join('\n');
+    }
+
+    try {
+      htmlArea.value = formatContainer(output);
+    } catch (err) {
+      // Fallback to raw innerHTML if anything goes wrong
+      htmlArea.value = output.innerHTML;
+    }
+  }
 }
